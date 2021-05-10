@@ -1,5 +1,14 @@
 package dbutil
 
+import "github.com/save95/xlog"
+
+// Option 连接操作配置
+type Option struct {
+	Name   string         // 连接别名
+	Config *ConnectConfig // 连接配置
+	Logger xlog.XLog      // 日志
+}
+
 // ConnectConfig 数据库链接配置
 type ConnectConfig struct {
 	Dsn         string // 连接

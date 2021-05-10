@@ -1,7 +1,6 @@
 package dbutil
 
 import (
-	"log"
 	"sync"
 	"time"
 
@@ -10,22 +9,14 @@ import (
 	"github.com/pkg/errors"
 )
 
-type (
-	dbLog struct{}
-
-	// 重置db日志打印
-	dbFunc func() (*gorm.DB, error)
-)
-
-func (l *dbLog) Print(v ...interface{}) {
-	log.Println(gorm.LogFormatter(v...)...)
-}
+type dbFunc func() (*gorm.DB, error)
 
 // 利用该结构减少并发锁竞争
 var dbRelation sync.Map
 
 // 获取db
-func connectWithoutCache(config *ConnectConfig) (*gorm.DB, error) {
+func connectWithoutCache(option *Option) (*gorm.DB, error) {
+	config := option.Config
 	db, err := gorm.Open(config.Driver, config.Dsn)
 	if err != nil {
 		return nil, errors.Wrap(err, "db连接异常")
@@ -41,15 +32,17 @@ func connectWithoutCache(config *ConnectConfig) (*gorm.DB, error) {
 		db.DB().SetConnMaxLifetime(time.Duration(config.MaxLifeTime) * time.Second)
 	}
 
-	// 重新设置日志
-	db.SetLogger(&dbLog{})
 	db.LogMode(config.LogMode)
+	// 重新设置日志
+	if option.Logger != nil {
+		db.SetLogger(convertLogger(option.Logger))
+	}
 	return db, nil
 }
 
 // Connect 获取db
-func Connect(name string, config *ConnectConfig) (*gorm.DB, error) {
-	if name == "" {
+func Connect(option *Option) (*gorm.DB, error) {
+	if option.Name == "" {
 		return nil, errors.New("the db config name invalid")
 	}
 
@@ -61,7 +54,7 @@ func Connect(name string, config *ConnectConfig) (*gorm.DB, error) {
 		wg sync.WaitGroup
 	)
 	wg.Add(1)
-	fi, loaded := dbRelation.LoadOrStore(name, dbFunc(func() (*gorm.DB, error) {
+	fi, loaded := dbRelation.LoadOrStore(option.Name, dbFunc(func() (*gorm.DB, error) {
 		// 阻塞直到初始化完成
 		wg.Wait()
 		return db, err
@@ -73,7 +66,7 @@ func Connect(name string, config *ConnectConfig) (*gorm.DB, error) {
 	}
 
 	// 未找到则需要初始化
-	db, err = connectWithoutCache(config)
+	db, err = connectWithoutCache(option)
 
 	// 真实的返回db函数，wg释放后
 	f := dbFunc(func() (*gorm.DB, error) {
@@ -82,6 +75,6 @@ func Connect(name string, config *ConnectConfig) (*gorm.DB, error) {
 
 	wg.Done()
 	// 重置函数
-	dbRelation.Store(name, f)
+	dbRelation.Store(option.Name, f)
 	return db, err
 }
