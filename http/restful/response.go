@@ -13,6 +13,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/save95/go-pkg/constant"
+	"github.com/save95/go-pkg/framework/logger"
 	"github.com/save95/go-pkg/http/types"
 	"github.com/save95/go-pkg/utils/strutil"
 	"github.com/save95/xerror"
@@ -25,8 +26,17 @@ type response struct {
 }
 
 // NewResponse 创建 Restful 标准响应生成器
-func NewResponse(ctx *gin.Context, logger xlog.XLog) *response {
-	return &response{ctx: ctx, logger: logger}
+func NewResponse(ctx *gin.Context) *response {
+	var log xlog.XLog
+
+	htx, err := types.ParserHttpContext(ctx)
+	if nil != err {
+		log = logger.NewDefaultLogger()
+	} else {
+		log = htx.Logger()
+	}
+
+	return &response{ctx: ctx, logger: log}
 }
 
 // SetHeader 设置请求头
