@@ -13,7 +13,7 @@ import (
 )
 
 // JWT jwt 鉴权中间件
-func JWT(f types.RoleConvert) gin.HandlerFunc {
+func JWT(f types.ToRole) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := (userJwt{ctx: c, roleConvert: f}).handle(); err != nil {
 			fmt.Println("Unauthorized")
@@ -26,7 +26,7 @@ func JWT(f types.RoleConvert) gin.HandlerFunc {
 
 type userJwt struct {
 	ctx         *gin.Context
-	roleConvert types.RoleConvert
+	roleConvert types.ToRole
 }
 
 // 鉴权处理
