@@ -7,7 +7,6 @@ import (
 	"syscall"
 
 	"github.com/save95/go-pkg/framework/logger"
-
 	"github.com/save95/xlog"
 )
 
