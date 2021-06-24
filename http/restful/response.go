@@ -229,6 +229,7 @@ func (r *response) WithError(err error) {
 	r.logger.Error(newRequestError(rq, err))
 
 	if e, ok := err.(xerror.XError); ok {
+		r.ctx.Header("X-Error-Code", strconv.Itoa(e.ErrorCode()))
 		r.ctx.AbortWithStatusJSON(e.HttpStatus(), gin.H{
 			"message": e.String(),
 		})
