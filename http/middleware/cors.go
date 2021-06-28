@@ -34,6 +34,8 @@ func (ch corsHandler) getCORSConfig() cors.Config {
 			"Authorization", "Content-MD5",
 			// 分页响应头
 			"Link", "X-More-Resource", "X-Pagination-Info", "X-Total-Count",
+			// 错误码响应
+			"X-Error-Code",
 		},
 		MaxAge: 12 * time.Hour,
 	}
