@@ -1,18 +1,32 @@
 package dbutil
 
 import (
-	"github.com/jinzhu/gorm"
+	"time"
+
 	"github.com/save95/xlog"
+	"gorm.io/gorm/logger"
 )
 
-type dbLog struct {
+type dbWriter struct {
 	log xlog.XLog
 }
 
-func (l *dbLog) Print(v ...interface{}) {
-	l.log.Info(gorm.LogFormatter(v...)...)
+func (l *dbWriter) Printf(s string, vs ...interface{}) {
+	l.log.Infof(s, vs...)
 }
 
-func convertLogger(logger xlog.XLog) *dbLog {
-	return &dbLog{log: logger}
+func newWriter(logger xlog.XLog) *dbWriter {
+	return &dbWriter{log: logger}
+}
+
+func newLogger(l xlog.XLog) logger.Interface {
+	return logger.New(
+		newWriter(l),
+		logger.Config{
+			SlowThreshold:             time.Second, // Slow SQL threshold
+			LogLevel:                  logger.Info, // Log level
+			IgnoreRecordNotFoundError: true,        // Ignore ErrRecordNotFound error for logger
+			Colorful:                  false,       // Disable color
+		},
+	)
 }
