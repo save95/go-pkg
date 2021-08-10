@@ -1,8 +1,8 @@
 package dbutil
 
 import (
-	"github.com/jinzhu/gorm"
 	"github.com/pkg/errors"
+	"gorm.io/gorm"
 )
 
 // TransactionTask 事务处理函数
