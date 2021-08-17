@@ -18,7 +18,7 @@ func toDialect(driver, dsn string) (gorm.Dialector, error) {
 			DontSupportRenameColumn:   true,  // 用 `change` 重命名列，MySQL 8 之前的数据库和 MariaDB 不支持重命名列
 			SkipInitializeWithVersion: false, // 根据当前 MySQL 版本自动配置
 		}), nil
-	case "sqlite":
+	case "sqlite", "sqlite3":
 		return sqlite.Open(dsn), nil
 	default:
 		return nil, xerror.New("dialect convert undefined, please use `dbutil.ConnectWith`")
