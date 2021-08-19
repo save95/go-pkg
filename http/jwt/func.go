@@ -1,53 +1,66 @@
 package jwt
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/save95/go-pkg/constant"
-	"github.com/save95/go-pkg/http/types"
 )
 
-// NewClaims 创建请求权
-func NewClaims(user types.User) (*claims, error) {
-	var jwtRoles []string
-	for i := range user.Roles {
-		jwtRoles = append(jwtRoles, user.Roles[i].String())
-	}
-
-	return &claims{
-		Account: user.Name,
-		UserID:  user.ID,
-		Name:    user.Name,
-		Roles:   jwtRoles,
-	}, nil
+// ParseTokenWithGin 通过 gin.Context 初始化 token
+// 从 gin.Context 优先读取 http header 中的 X-Token 值；如果不存在，则读取 query string 中的 token 值
+func ParseTokenWithGin(ctx *gin.Context) (*token, error) {
+	return ParseTokenWithGinSecret(ctx, jwtSecret)
 }
 
-// ParseClaims 从上下文中解析请求权
+// ParseTokenWithGinSecret 自定义 secret 初始化 token
+func ParseTokenWithGinSecret(ctx *gin.Context, secret []byte) (*token, error) {
+	c, err := parseClaims(ctx, secret)
+	if nil != err {
+		return nil, err
+	}
+
+	tk := newTokenWith(c)
+	tk.SetSecret(secret)
+
+	return tk, nil
+}
+
+// parseClaims 从上下文中解析请求权
 // 优先读取 http header 中的 X-Token 值；如果不存在，则读取 query string 中的 token 值
-func ParseClaims(ctx *gin.Context) (*claims, error) {
-	token := strings.TrimSpace(ctx.GetHeader(constant.HttpTokenHeaderKey))
-	if len(token) == 0 {
-		token, _ = ctx.GetQuery("token")
+func parseClaims(ctx *gin.Context, secret []byte) (*claims, error) {
+	tokenStr := strings.TrimSpace(ctx.GetHeader(constant.HttpTokenHeaderKey))
+	if len(tokenStr) == 0 {
+		tokenStr, _ = ctx.GetQuery("token")
 	}
 
-	token = strings.TrimSpace(token)
+	tokenStr = strings.TrimSpace(tokenStr)
 
-	return parseToken(token)
+	return parseToken(tokenStr, secret)
 }
 
-func parseToken(token string) (*claims, error) {
+func parseToken(token string, secret []byte) (*claims, error) {
+	if len(secret) == 0 {
+		secret = jwtSecret
+	}
+
 	tokenClaims, err := jwt.ParseWithClaims(token, &claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtSecret, nil
+		// Don't forget to validate the alg is what you expect:
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+
+		return secret, nil
 	})
 
 	if tokenClaims == nil {
 		return nil, err
 	}
 
-	if claims, ok := tokenClaims.Claims.(*claims); ok && tokenClaims.Valid {
-		return claims, nil
+	if c, ok := tokenClaims.Claims.(*claims); ok && tokenClaims.Valid {
+		return c, nil
 	}
 
 	return nil, err

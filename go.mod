@@ -5,10 +5,10 @@ go 1.13
 require (
 	github.com/EDDYCJY/fake-useragent v0.2.0
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.1
 	github.com/go-redis/redis v6.15.9+incompatible
+	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/hashicorp/go-version v1.2.1
 	github.com/jonboulle/clockwork v0.2.2 // indirect
 	github.com/lestrrat-go/file-rotatelogs v2.4.0+incompatible
