@@ -14,7 +14,7 @@ import (
 func RESTFul(version types.ApiVersion) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := (restful{ctx: ctx, version: version}).Handle(); nil != err {
-			fmt.Println("not support accept")
+			fmt.Printf("not support accept: %s\n", err)
 			_ = ctx.AbortWithError(http.StatusBadRequest, fmt.Errorf("not support accept"))
 			return
 		}
