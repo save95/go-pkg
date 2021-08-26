@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/save95/go-pkg/http/types"
@@ -14,7 +15,7 @@ import (
 func RESTFul(version types.ApiVersion) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		if err := (restful{ctx: ctx, version: version}).Handle(); nil != err {
-			fmt.Println("not support accept")
+			fmt.Printf("not support accept: %s\n", err)
 			_ = ctx.AbortWithError(http.StatusBadRequest, fmt.Errorf("not support accept"))
 			return
 		}
@@ -37,21 +38,18 @@ func (r restful) Handle() error {
 }
 
 func (r restful) parseAccept() error {
-	// see: https://developer.github.com/v3/media/#request-specific-version
-	// application/vnd.server[.version].param[+json]
-	// eg: application/vnd.server.v1.raw+json
-	accept := r.ctx.GetHeader("Accept")
-	if len(accept) == 0 {
-		return errors.New("header error")
-	}
-
 	stx, err := types.ParserHttpContext(r.ctx)
 	if nil != err {
 		return err
 	}
 
+	// see: https://developer.github.com/v3/media/#request-specific-version
+	// application/vnd.server[.version].param[+json]
+	// eg: application/vnd.server.v1.raw+json
+	accept := r.ctx.GetHeader("Accept")
+
 	// 默认值
-	if accept == "*/*" || accept == "application/json" {
+	if len(accept) == 0 || accept == "*/*" || strings.Contains(accept, "application/json") {
 		stx.Set("version", r.version)
 		stx.Set("bodyProperty", types.BodyPropertyRaw)
 		stx.StorageTo(r.ctx)
