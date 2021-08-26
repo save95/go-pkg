@@ -26,7 +26,7 @@ func NewToken(user types.User) *token {
 	}
 
 	return newTokenWith(&claims{
-		Account: user.Name,
+		Account: user.Account,
 		UserID:  user.ID,
 		Name:    user.Name,
 		Roles:   jwtRoles,
