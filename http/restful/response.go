@@ -226,7 +226,7 @@ func (r *response) WithError(err error) {
 		rq.Body = ioutil.NopCloser(bytes.NewBuffer(bs))
 	}
 
-	r.logger.Error(newRequestError(rq, err))
+	_ = r.ctx.Error(err)
 
 	if e, ok := err.(xerror.XError); ok {
 		r.ctx.Header("X-Error-Code", strconv.Itoa(e.ErrorCode()))
