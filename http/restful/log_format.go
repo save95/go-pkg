@@ -122,6 +122,9 @@ func (f _formatter) body() string {
 
 func (f _formatter) response() string {
 	resp := f.request.Response
+	if nil == resp {
+		return ""
+	}
 
 	var bs bytes.Buffer
 	bs.WriteString("[")
