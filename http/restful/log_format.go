@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/save95/xerror"
@@ -17,6 +18,10 @@ type _formatter struct {
 	err        error
 }
 
+func NewRequestLogger(request *http.Request) *_formatter {
+	return newRequestError(request, nil)
+}
+
 func newRequestError(request *http.Request, err error) *_formatter {
 	return &_formatter{
 		request:    request,
@@ -26,12 +31,22 @@ func newRequestError(request *http.Request, err error) *_formatter {
 }
 
 func (f _formatter) String() string {
+	if nil != f.err {
+		return fmt.Sprintf(
+			"api xerror: \n%s\n[[REQUEST]] \n%s\n%s\n\n%s",
+			f.uri(),
+			f.headers(),
+			f.body(),
+			f.error(),
+		)
+	}
+
 	return fmt.Sprintf(
-		"api xerror: \n%s\n%s\n%s\n%s",
+		"api: \n%s\n[[REQUEST]] \n%s\n%s\n\n[[RESPONSE]] \n%s",
 		f.uri(),
 		f.headers(),
 		f.body(),
-		f.error(),
+		f.response(),
 	)
 }
 
@@ -103,6 +118,37 @@ func (f _formatter) body() string {
 	}
 
 	return bf.String()
+}
+
+func (f _formatter) response() string {
+	resp := f.request.Response
+
+	var bs bytes.Buffer
+	bs.WriteString("[")
+	bs.WriteString(strconv.Itoa(resp.StatusCode))
+	bs.WriteString("] ")
+	bs.WriteString(resp.Status)
+	bs.WriteByte('\n')
+
+	rbs, err := ioutil.ReadAll(resp.Body)
+	if nil != err {
+		bs.WriteString(f.retractive)
+		bs.WriteString("<read request body: ")
+		bs.WriteString(err.Error())
+		bs.WriteString(">")
+
+		return bs.String()
+	}
+
+	if len(rbs) == 0 {
+		bs.WriteString(f.retractive)
+		bs.WriteString("<nil>")
+		return bs.String()
+	}
+
+	bs.Write(rbs)
+
+	return bs.String()
 }
 
 func (f _formatter) error() string {
