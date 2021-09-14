@@ -10,16 +10,30 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestGenTransNo(t *testing.T) {
+func TestTransNo(t *testing.T) {
 	userId := 18922911
 	transNo := TransNo(uint(userId))
 
 	userIdStr := strconv.Itoa(userId)
 
-	assert.Equal(t, len(transNo), 15)
+	assert.Equal(t, len(transNo), 16)
 	assert.Equal(t, transNo[0:2], fmt.Sprintf("%d", time.Now().Year()-2000))
 	assert.Equal(t, transNo[2:5], fmt.Sprintf("%d", time.Now().YearDay()))
-	assert.Equal(t, transNo[7:10], fmt.Sprintf(userIdStr[len(userIdStr)-3:]))
+	assert.Equal(t, transNo[7:11], fmt.Sprintf(userIdStr[len(userIdStr)-4:]))
+}
+
+func TestTransNoWith(t *testing.T) {
+	userId := 18922911
+
+	transNo := TransNoWith(uint(userId), 16)
+	assert.Equal(t, len(transNo), 16)
+
+	userIdStr := fmt.Sprintf("%05d", userId)
+	transNo2 := TransNoWith(uint(userId), 30)
+	assert.Equal(t, len(transNo2), 30)
+	assert.Equal(t, transNo2[0:2], fmt.Sprintf("%d", time.Now().Year()-2000))
+	assert.Equal(t, transNo2[2:5], fmt.Sprintf("%d", time.Now().YearDay()))
+	assert.Equal(t, transNo[len(transNo)-9:len(transNo)-5], fmt.Sprintf(userIdStr[len(userIdStr)-4:]))
 }
 
 func TestGenTransNo_Sync(t *testing.T) {
