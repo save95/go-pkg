@@ -1,6 +1,10 @@
 package sliceutil
 
-import "reflect"
+import (
+	"reflect"
+
+	"github.com/save95/go-pkg/utils/valutil"
+)
 
 // ToAny 将任意切片转成 []interface{} 切片
 func ToAny(slice interface{}) ([]interface{}, bool) {
@@ -45,6 +49,23 @@ func ToInt(slice []interface{}) []int {
 	res := make([]int, 0, len(slice))
 	for _, value := range slice {
 		if v, ok := value.(int); ok {
+			res = append(res, v)
+		}
+	}
+
+	return res
+}
+
+// ToPossibleInt 尽可能的转成 []int 切片
+// 如：[]interface{}{1, "2", "b", "c", "", "3.0", "4.62"} => []int{1, 2, 3, 4}
+func ToPossibleInt(slice []interface{}) []int {
+	if len(slice) == 0 {
+		return []int{}
+	}
+
+	res := make([]int, 0, len(slice))
+	for _, value := range slice {
+		if v, err := valutil.Int(value); err == nil {
 			res = append(res, v)
 		}
 	}

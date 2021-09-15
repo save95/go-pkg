@@ -34,6 +34,11 @@ func TestToInt(t *testing.T) {
 	assert.Equal(t, ToInt(source), []int{1, 2, 3, 4, 5})
 }
 
+func TestToPossibleInt(t *testing.T) {
+	source := []interface{}{1, 2, 3, 4, 5, "6", "b", "c", "", "7.0", "8.53"}
+	assert.Equal(t, ToPossibleInt(source), []int{1, 2, 3, 4, 5, 6, 7, 8})
+}
+
 func TestToString(t *testing.T) {
 	source := []interface{}{1, 2, 3, 4, 5, "1", "b", "c"}
 	assert.Equal(t, ToString(source), []string{"1", "b", "c"})
