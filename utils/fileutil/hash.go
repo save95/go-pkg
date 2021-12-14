@@ -3,7 +3,7 @@ package fileutil
 import (
 	"io"
 
-	"github.com/save95/go-pkg/utils/fsutil"
+	"github.com/save95/go-utils/fsutil"
 )
 
 // QiNiuHash 获得文件内容的 hash

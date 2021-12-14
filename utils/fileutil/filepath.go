@@ -1,7 +1,7 @@
 package fileutil
 
 import (
-	"github.com/save95/go-pkg/utils/fsutil"
+	"github.com/save95/go-utils/fsutil"
 )
 
 // Exist 判断文件是否存在

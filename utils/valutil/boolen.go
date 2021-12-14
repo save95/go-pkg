@@ -1,8 +1,7 @@
 package valutil
 
 import (
-	"errors"
-	"strings"
+	util "github.com/save95/go-utils/valutil"
 )
 
 // Bool 将任意值转成 bool
@@ -18,39 +17,7 @@ import (
 //    0.0···001 ... 1 ... ∞ -> true
 //    -∞ ... -1 ... -0.1 ... 0 -> false
 // 如果传入值是其他类型，则返回 ERROR
+// Deprecated
 func Bool(any interface{}) (bool, error) {
-	if v, ok := any.(bool); ok {
-		return v, nil
-	}
-
-	if v, ok := any.(string); ok {
-		switch strings.ToLower(v) {
-		case "true", "yes":
-			return true, nil
-		case "false", "no", "":
-			return false, nil
-		default:
-			i, err := Int(v)
-			if nil != err {
-				return false, errors.New("is string, but cannot convert it")
-			}
-
-			if i > 0 {
-				return true, nil
-			} else {
-				return false, nil
-			}
-		}
-	}
-
-	i, err := Int(any)
-	if nil == err {
-		if i > 0 {
-			return true, nil
-		} else {
-			return false, nil
-		}
-	}
-
-	return false, errors.New("cannot convert it")
+	return util.Bool(any)
 }

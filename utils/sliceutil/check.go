@@ -1,9 +1,11 @@
 package sliceutil
 
-import "reflect"
+import (
+	util "github.com/save95/go-utils/sliceutil"
+)
 
+// Is 判断是否 slice
+// Deprecated
 func Is(arg interface{}) bool {
-	val := reflect.ValueOf(arg)
-
-	return val.Kind() == reflect.Slice
+	return util.Is(arg)
 }
