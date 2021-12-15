@@ -1,6 +1,7 @@
 package dbutil
 
 import (
+	"strings"
 	"sync"
 	"time"
 
@@ -52,6 +53,11 @@ func Connect(option *Option) (*gorm.DB, error) {
 	}
 	if option.Config == nil {
 		return nil, errors.New("db config empty")
+	}
+	if len(option.Config.Driver) == 0 || len(option.Config.Dsn) == 0 ||
+		!strings.Contains(option.Config.Dsn, ":") ||
+		!strings.Contains(option.Config.Dsn, "@") {
+		return nil, errors.New("db config invalid")
 	}
 
 	var (
