@@ -7,7 +7,8 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.1 // indirect
 	github.com/eko/gocache/v2 v2.1.0
 	github.com/gin-contrib/cors v1.3.1
-	github.com/gin-gonic/gin v1.7.1
+	github.com/gin-contrib/sessions v0.0.4
+	github.com/gin-gonic/gin v1.7.4
 	github.com/go-redis/redis/v8 v8.9.0
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/hashicorp/go-version v1.2.1
@@ -21,6 +22,7 @@ require (
 	github.com/save95/xerror v1.0.0
 	github.com/save95/xlog v0.0.1
 	github.com/sirupsen/logrus v1.8.1
+	gopkg.in/check.v1 v1.0.0-20190902080502-41f04d3bba15 // indirect
 	gorm.io/driver/mysql v1.1.1
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.12
