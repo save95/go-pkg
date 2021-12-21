@@ -14,4 +14,13 @@ type JWTOption struct {
 	RefreshDuration time.Duration
 	// token 加密密钥。默认为 "go-pkg.JwtSecret"
 	Secret []byte
+	// 是否开启静默模式。true-开启：鉴权失败，不注入用户信息；false-关闭。鉴权失败阻断，并抛出错误
+	SilentMode bool
+}
+
+// WithSilent 设置是否开启静默模式
+func (o *JWTOption) WithSilent(enable bool) *JWTOption {
+	o.SilentMode = enable
+
+	return o
 }

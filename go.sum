@@ -400,10 +400,11 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
-github.com/save95/go-utils v1.0.2 h1:bb1u27AHJJrfZuioB5eL+fvA/Fdu68551nkOWxcFe/U=
-github.com/save95/go-utils v1.0.2/go.mod h1:aKN7VFk3dVHVOyY8SSzRtut7bj6xm0JT/3bOwHMP5+g=
-github.com/save95/xerror v1.0.0 h1:HXqH6xIHc466Ejy1fXIdS1PGqSlDeLSzhQYTYiZq8DE=
+github.com/save95/go-utils v1.0.3 h1:P9ectVzqYx3Ll0UJGrKUTIMjefwCOkl4dKoW2NNEHeo=
+github.com/save95/go-utils v1.0.3/go.mod h1:aKN7VFk3dVHVOyY8SSzRtut7bj6xm0JT/3bOwHMP5+g=
 github.com/save95/xerror v1.0.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
+github.com/save95/xerror v1.1.0 h1:OO4RIW56F9ppG5UZ+bTPOoP3+LzbI2ZKxJfa6pnS2l8=
+github.com/save95/xerror v1.1.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
 github.com/save95/xlog v0.0.1 h1:OeyH7cVMvVA2VnKhSmlLWCZ35U90KsLDFagyDL9nOes=
 github.com/save95/xlog v0.0.1/go.mod h1:OYTVzpCxV1rO7KyXhwh20qC3qG7uL7LxLom421IyGck=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=
@@ -524,6 +525,7 @@ golang.org/x/sync v0.0.0-20190227155943-e225da77a7e6/go.mod h1:RxMgew5VJxzue5/jJ
 golang.org/x/sync v0.0.0-20190423024810-112230192c58/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sync v0.0.0-20201020160332-67f06af15bc9/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
+golang.org/x/sync v0.0.0-20201207232520-09787c993a3a h1:DcqTD9SDLc+1P/r1EmRBwnVsrOwW+kk2vWf9n+1sGhs=
 golang.org/x/sync v0.0.0-20201207232520-09787c993a3a/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
 golang.org/x/sys v0.0.0-20170830134202-bb24a47a89ea/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=
 golang.org/x/sys v0.0.0-20180823144017-11551d06cbcc/go.mod h1:STP8DvDyc/dI5b8T5hshtkjS+E42TnysNCUPdjciGhY=

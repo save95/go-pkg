@@ -6,9 +6,13 @@ import (
 	browser "github.com/EDDYCJY/fake-useragent"
 )
 
+// UserAgent
+// Deprecated
 type UserAgent struct {
 }
 
+// RandOfPC
+// Deprecated
 func (ua UserAgent) RandOfPC() string {
 	uas := browser.Chrome()
 

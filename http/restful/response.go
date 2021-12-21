@@ -220,6 +220,13 @@ func (r *response) WithBody(body string) {
 
 // WithError 响应错误消息(HttpStatus!=200)
 func (r *response) WithError(err error) {
+	if nil == err {
+		r.ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "error not defined",
+		})
+		return
+	}
+
 	rq := r.ctx.Request
 	if stx, se := types.ParserHttpContext(r.ctx); nil == se {
 		bs := stx.Value(constant.HttpCustomRawRequestBodyKey).([]byte)

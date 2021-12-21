@@ -24,16 +24,28 @@ func newJWTHandle(ctx *gin.Context, opt *JWTOption) *jwtHandle {
 // 只负责验证是否登陆，不处理其他事务
 func (h *jwtHandle) handle() error {
 	if h.opt == nil || h.opt.RoleConvert == nil {
-		return errors.New("jwt option empty")
+		if h.opt.SilentMode {
+			return nil
+		} else {
+			return errors.New("jwt option empty")
+		}
 	}
 
 	token, err := jwt.ParseTokenWithGinSecret(h.ctx, h.opt.Secret)
 	if nil != err {
-		return errors.WithMessage(err, "登录信息错误, 请重新登录")
+		if h.opt.SilentMode {
+			return nil
+		} else {
+			return errors.WithMessage(err, "登录信息错误, 请重新登录")
+		}
 	}
 
 	if token.IsExpired() {
-		return errors.New("登录信息过期, 请重新登录")
+		if h.opt.SilentMode {
+			return nil
+		} else {
+			return errors.New("登录信息过期, 请重新登录")
+		}
 	}
 
 	// 自动刷新 token
@@ -48,7 +60,11 @@ func (h *jwtHandle) handle() error {
 	// 基础用户信息
 	user, err := token.User(h.opt.RoleConvert)
 	if err != nil {
-		return err
+		if h.opt.SilentMode {
+			return nil
+		} else {
+			return err
+		}
 	}
 
 	// 写入自定义上下文

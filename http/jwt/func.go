@@ -22,8 +22,7 @@ func ParseTokenWithGinSecret(ctx *gin.Context, secret []byte) (*token, error) {
 		return nil, err
 	}
 
-	tk := newTokenWith(c)
-	tk.SetSecret(secret)
+	tk := newTokenWith(c).WithSecret(secret)
 
 	return tk, nil
 }
@@ -38,7 +37,13 @@ func parseClaims(ctx *gin.Context, secret []byte) (*claims, error) {
 
 	tokenStr = strings.TrimSpace(tokenStr)
 
-	return parseToken(tokenStr, secret)
+	c, err := parseToken(tokenStr, secret)
+	if nil != err {
+		return nil, err
+	}
+
+	c.IP = ctx.ClientIP()
+	return c, nil
 }
 
 func parseToken(token string, secret []byte) (*claims, error) {
