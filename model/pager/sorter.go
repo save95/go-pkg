@@ -43,6 +43,8 @@ func ParseSorts(sort string) []Sorter {
 
 	sorts := strings.Split(sort, ",")
 	for _, s := range sorts {
+		// query string 中的 + 在 net/url/url.go 中会被解析成空格
+		s = strings.TrimSpace(s)
 		switch s[:1] {
 		case "*":
 			sorters = append(sorters, Sorter{
