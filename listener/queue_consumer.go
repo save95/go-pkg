@@ -8,9 +8,9 @@ import (
 	"github.com/save95/xlog"
 )
 
-type queueConsumer struct {
-	queueName   string
-	queueConfig *queue.RedisQueueConfig
+type redisConsumer struct {
+	queueName string
+	config    *queue.RedisQueueConfig
 
 	ctx context.Context
 	log xlog.XLogger
@@ -18,8 +18,8 @@ type queueConsumer struct {
 	fun func(val string) error
 }
 
-func (q *queueConsumer) Consume() error {
-	queued := queue.NewSimpleRedis(q.queueConfig, q.queueName)
+func (q *redisConsumer) Consume() error {
+	queued := queue.NewSimpleRedis(q.config, q.queueName)
 
 	for {
 		str, err := queued.Pop(q.ctx)

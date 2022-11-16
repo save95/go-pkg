@@ -400,8 +400,8 @@ github.com/rogpeppe/go-internal v1.3.0/go.mod h1:M8bDsm7K2OlrFYOpmOWEs/qY81heoFR
 github.com/russross/blackfriday/v2 v2.0.1/go.mod h1:+Rmxgy9KzJVeS9/2gXHxylqXiyQDYRxCVz55jmeOWTM=
 github.com/ryanuber/columnize v0.0.0-20160712163229-9b3edd62028f/go.mod h1:sm1tb6uqfes/u+d4ooFouqFdy9/2g9QGwK3SQygK0Ts=
 github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0XIa01GRL2eRQVjQkKGqKF3SF9vZR/HnPullcV2E=
-github.com/save95/go-utils v1.0.3 h1:P9ectVzqYx3Ll0UJGrKUTIMjefwCOkl4dKoW2NNEHeo=
-github.com/save95/go-utils v1.0.3/go.mod h1:aKN7VFk3dVHVOyY8SSzRtut7bj6xm0JT/3bOwHMP5+g=
+github.com/save95/go-utils v1.0.4-0.20221116061429-f98c5aee1649 h1:DyYXBSi9BZaq2E44fCkLvbhTqdi9HAG+IduaDNPcqpE=
+github.com/save95/go-utils v1.0.4-0.20221116061429-f98c5aee1649/go.mod h1:aKN7VFk3dVHVOyY8SSzRtut7bj6xm0JT/3bOwHMP5+g=
 github.com/save95/xerror v1.0.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
 github.com/save95/xerror v1.1.0 h1:OO4RIW56F9ppG5UZ+bTPOoP3+LzbI2ZKxJfa6pnS2l8=
 github.com/save95/xerror v1.1.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=

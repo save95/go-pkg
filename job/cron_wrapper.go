@@ -26,6 +26,14 @@ func (j cronJob) Run() {
 	} else {
 		j.log.Debug(msg)
 	}
+	defer func() {
+		msg = fmt.Sprintf("[job] %s run end", j.jobName)
+		if nil == j.log {
+			log.Print(msg)
+		} else {
+			j.log.Debug(msg)
+		}
+	}()
 
 	if err := j.job.Run(); nil != err {
 		msg := fmt.Sprintf("[job] %s run failed: %+v", j.jobName, err)
@@ -34,13 +42,6 @@ func (j cronJob) Run() {
 		} else {
 			j.log.Error(msg)
 		}
-	}
-
-	msg = fmt.Sprintf("[job] %s run end", j.jobName)
-	if nil == j.log {
-		log.Print(msg)
-	} else {
-		j.log.Debug(msg)
 	}
 }
 

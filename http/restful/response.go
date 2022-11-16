@@ -15,7 +15,7 @@ import (
 	"github.com/save95/go-pkg/constant"
 	"github.com/save95/go-pkg/framework/logger"
 	"github.com/save95/go-pkg/http/types"
-	"github.com/save95/go-pkg/utils/strutil"
+	"github.com/save95/go-utils/strutil"
 	"github.com/save95/xerror"
 	"github.com/save95/xlog"
 )
@@ -61,14 +61,41 @@ func (r *response) Retrieve(entity interface{}) {
 	r.ctx.AbortWithStatusJSON(http.StatusOK, entity)
 }
 
-// ListWithPagination 分页列表的响应
-func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
-	tk := reflect.TypeOf(entities).Kind()
-	if tk != reflect.Slice && tk != reflect.Array {
-		r.WithError(xerror.New("response data type error"))
-		return
+// TableWithPagination 表格分页响应
+func (r *response) TableWithPagination(resp *TableResponse) {
+	// 写响应页码
+	r.writeResponsePagination(resp.TotalRow)
+
+	rows := make(map[string]map[string]interface{}, 0)
+	for _, item := range resp.Items {
+		row, ok := rows[item.RowKey]
+		if !ok {
+			row = make(map[string]interface{}, 0)
+		}
+
+		row[item.Column] = item.Data
+		rows[item.RowKey] = row
 	}
 
+	extends := make(map[string]interface{}, 0)
+	for _, item := range resp.Extends {
+		if _, ok := extends[item.RowKey]; !ok {
+			extends[item.RowKey] = item.Data
+		}
+	}
+
+	//r.ctx.Header("Content-MD5", "")
+
+	r.ctx.AbortWithStatusJSON(http.StatusOK, map[string]interface{}{
+		"columns": resp.Columns,
+		"rowKeys": resp.RowKeys,
+		"data":    rows,
+		"extends": extends,
+	})
+}
+
+// writeResponsePagination 写响应的分页数据
+func (r *response) writeResponsePagination(totalRow uint) {
 	// 设置总记录数
 	r.ctx.Header("X-Total-Count", strconv.Itoa(int(totalRow)))
 
@@ -118,6 +145,18 @@ func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
 		lastUri,
 	)
 	r.ctx.Header("Link", links)
+}
+
+// ListWithPagination 分页列表的响应
+func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
+	tk := reflect.TypeOf(entities).Kind()
+	if tk != reflect.Slice && tk != reflect.Array {
+		r.WithError(xerror.New("response data type error"))
+		return
+	}
+
+	// 写响应页码
+	r.writeResponsePagination(totalRow)
 
 	//r.ctx.Header("Content-MD5", "")
 

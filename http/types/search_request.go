@@ -1,6 +1,8 @@
 package types
 
-import "github.com/save95/go-pkg/constant"
+import (
+	"github.com/save95/go-pkg/constant"
+)
 
 // SearchRequest 通用搜索请求
 type SearchRequest struct {
@@ -20,4 +22,11 @@ func (sr SearchRequest) GetLimit() int64 {
 	}
 
 	return sr.Limit
+}
+
+// ResponseModel 通用响应基础模型
+type ResponseModel struct {
+	ID          uint   `json:"id" copy:"ID"`
+	CreatedTime string `json:"createdTime" copy:"createdAt"`
+	UpdatedTime string `json:"updatedTime" copy:"updatedAt"`
 }

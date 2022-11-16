@@ -8,6 +8,8 @@ type Option struct {
 	Limit   int
 	Filter  Filter
 	Sorters []Sorter
+
+	Preloads []string
 }
 
 func (po Option) GetLimit() int {
@@ -16,4 +18,20 @@ func (po Option) GetLimit() int {
 	}
 
 	return po.Limit
+}
+
+func (po Option) GetSorters() []Sorter {
+	if po.Sorters == nil {
+		return []Sorter{}
+	}
+
+	return po.Sorters
+}
+
+func (po Option) GetPreloads() []string {
+	if po.Preloads == nil {
+		return []string{}
+	}
+
+	return po.Preloads
 }

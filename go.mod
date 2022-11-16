@@ -11,6 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/go-redis/redis/v8 v8.9.0
+	github.com/go-sql-driver/mysql v1.6.0
 	github.com/golang-jwt/jwt/v4 v4.0.0
 	github.com/hashicorp/go-version v1.2.1
 	github.com/jonboulle/clockwork v0.2.2 // indirect
@@ -19,7 +20,7 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.8 // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
-	github.com/save95/go-utils v1.0.3
+	github.com/save95/go-utils v1.0.4-0.20221116061429-f98c5aee1649
 	github.com/save95/xerror v1.1.0
 	github.com/save95/xlog v0.0.1
 	github.com/sirupsen/logrus v1.8.1
@@ -29,3 +30,7 @@ require (
 	gorm.io/driver/sqlite v1.1.4
 	gorm.io/gorm v1.21.12
 )
+
+//replace (
+//	github.com/save95/go-utils => /Users/royee/Develop/PoeticalSoft/save95/go-utils
+//)
