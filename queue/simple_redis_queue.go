@@ -44,6 +44,12 @@ func NewSimpleRedis(cnf *RedisQueueConfig, name string) IQueue {
 
 func (q *queue) Push(ctx context.Context, value string) error {
 	_, err := q.redisClient.LPush(ctx, q.name, value).Result()
+	if nil != err {
+		return err
+	}
+
+	// 推送完成就立即释放，防止占用过多的链接
+	_ = q.redisClient.Close()
 
 	return err
 }

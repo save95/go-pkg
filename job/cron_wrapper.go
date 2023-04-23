@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/robfig/cron/v3"
+	"github.com/save95/xerror"
 	"github.com/save95/xlog"
 )
 
@@ -36,6 +37,9 @@ func (j cronJob) Run() {
 	}()
 
 	if err := j.job.Run(); nil != err {
+		if xe, ok := err.(xerror.XError); ok {
+			err = xe.Unwrap()
+		}
 		msg := fmt.Sprintf("[job] %s run failed: %+v", j.jobName, err)
 		if nil == j.log {
 			log.Print(msg)

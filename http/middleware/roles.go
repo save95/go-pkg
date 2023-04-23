@@ -52,7 +52,7 @@ func RoleFuncAbort(action gin.HandlerFunc, roles ...types.IRole) gin.HandlerFunc
 			ctx.Next()
 		} else {
 			fmt.Println("role error, abort")
-			ctx.AbortWithStatus(http.StatusBadRequest)
+			ctx.AbortWithStatus(http.StatusForbidden)
 		}
 	}
 }

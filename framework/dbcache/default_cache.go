@@ -12,12 +12,11 @@ import (
 	"github.com/eko/gocache/v2/store"
 	"github.com/go-redis/redis/v8"
 	"github.com/save95/go-pkg/model/pager"
-	"github.com/save95/go-utils/sliceutil"
 	"github.com/save95/xerror"
 	"golang.org/x/sync/singleflight"
 )
 
-var single singleflight.Group
+var single = singleflight.Group{}
 
 type dbCache struct {
 	cacheManager *cache.Cache
@@ -55,6 +54,9 @@ func (s *dbCache) Paginate(ctx context.Context, opt pager.Option,
 	kbs, _ := json.Marshal(opt)
 	k := strings.ToLower(fmt.Sprintf("%x", md5.Sum(kbs)))
 	key := fmt.Sprintf("%s:paginate:%s", s.name, k)
+	//if strings.Contains(s.name, "round") {
+	//	fmt.Printf("========== %s ============\n", key)
+	//}
 
 	jsonStr, err := s.getOrQuery(ctx, key, func() (interface{}, error) {
 		records, total, err := fun()
@@ -62,15 +64,25 @@ func (s *dbCache) Paginate(ctx context.Context, opt pager.Option,
 			return nil, err
 		}
 
-		slices, ok := sliceutil.ToAny(records)
-		if !ok {
-			slices = make([]interface{}, 0)
+		//slices, ok := sliceutil.ToAny(records)
+		//if !ok {
+		//	slices = make([]interface{}, 0)
+		//}
+		//
+		//return &PaginateResult{
+		//	Data:  slices,
+		//	Total: total,
+		//	Query: opt,
+		//}, nil
+
+		bs, err := json.Marshal(records)
+		if nil != err {
+			return nil, err
 		}
 
 		return &PaginateResult{
-			Data:  slices,
-			Total: total,
-			Query: opt,
+			DataBytes: bs,
+			Total:     total,
 		}, nil
 	})
 	if nil != err {
@@ -87,23 +99,23 @@ func (s *dbCache) Paginate(ctx context.Context, opt pager.Option,
 
 func (s *dbCache) First(ctx context.Context, id uint,
 	fun func() (interface{}, error),
-) (interface{}, error) {
+) (string, error) {
 	if id == 0 {
-		return nil, xerror.New("id error")
+		return "", xerror.New("id error")
 	}
 
 	key := fmt.Sprintf("%s:first:%d", s.name, id)
 	jsonStr, err := s.getOrQuery(ctx, key, fun)
 	if nil != err {
-		return nil, err
+		return "", err
 	}
 
-	var data interface{}
-	if err := json.Unmarshal([]byte(jsonStr), &data); nil != err {
-		return nil, xerror.Wrap(err, "data unmarshal failed")
-	}
+	//var data interface{}
+	//if err := json.Unmarshal([]byte(jsonStr), &data); nil != err {
+	//	return nil, xerror.Wrap(err, "data unmarshal failed")
+	//}
 
-	return data, nil
+	return jsonStr, nil
 }
 
 func (s *dbCache) Remember(ctx context.Context, key string,

@@ -20,7 +20,7 @@ type IDBCache interface {
 		ctx context.Context,
 		id uint,
 		fun func() (interface{}, error),
-	) (interface{}, error) //  按 id 查询数据
+	) (string, error) //  按 id 查询数据
 	Remember(
 		ctx context.Context,
 		key string,
@@ -34,7 +34,6 @@ type IDBCache interface {
 }
 
 type PaginateResult struct {
-	Query pager.Option
-	Data  []interface{}
-	Total uint
+	DataBytes []byte
+	Total     uint
 }
