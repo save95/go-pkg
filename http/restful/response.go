@@ -23,10 +23,13 @@ import (
 type response struct {
 	ctx    *gin.Context
 	logger xlog.XLog
+
+	languageHeaderKey string
+	msgHandler        func(code int, language string) string
 }
 
 // NewResponse 创建 Restful 标准响应生成器
-func NewResponse(ctx *gin.Context) *response {
+func NewResponse(ctx *gin.Context, opts ...func(*response)) *response {
 	var log xlog.XLog
 
 	htx, err := types.ParserHttpContext(ctx)
@@ -36,7 +39,13 @@ func NewResponse(ctx *gin.Context) *response {
 		log = htx.Logger()
 	}
 
-	return &response{ctx: ctx, logger: log}
+	resp := &response{ctx: ctx, logger: log}
+
+	for _, opt := range opts {
+		opt(resp)
+	}
+
+	return resp
 }
 
 // SetHeader 设置请求头
@@ -276,8 +285,19 @@ func (r *response) WithError(err error) {
 
 	if e, ok := err.(xerror.XError); ok {
 		r.ctx.Header("X-Error-Code", strconv.Itoa(e.ErrorCode()))
+
+		language := r.ctx.GetHeader(r.languageHeaderKey)
+
+		msg := e.String()
+		if r.msgHandler != nil {
+			str := r.msgHandler(e.ErrorCode(), language)
+			if len(str) > 0 {
+				msg = str
+			}
+		}
+
 		r.ctx.AbortWithStatusJSON(e.HttpStatus(), gin.H{
-			"message": e.String(),
+			"message": msg,
 		})
 		return
 	}
