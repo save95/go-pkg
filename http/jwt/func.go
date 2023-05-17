@@ -15,35 +15,49 @@ func ParseTokenWithGin(ctx *gin.Context) (*token, error) {
 	return ParseTokenWithGinSecret(ctx, jwtSecret)
 }
 
-// ParseTokenWithGinSecret 自定义 secret 初始化 token
+// ParseTokenWithGinSecret 解析 token
 func ParseTokenWithGinSecret(ctx *gin.Context, secret []byte) (*token, error) {
-	c, err := parseClaims(ctx, secret)
-	if nil != err {
-		return nil, err
-	}
-
-	tk := newTokenWith(c).WithSecret(secret)
-
-	return tk, nil
-}
-
-// parseClaims 从上下文中解析请求权
-// 优先读取 http header 中的 X-Token 值；如果不存在，则读取 query string 中的 token 值
-func parseClaims(ctx *gin.Context, secret []byte) (*claims, error) {
-	tokenStr := strings.TrimSpace(ctx.GetHeader(constant.HttpTokenHeaderKey))
-	if len(tokenStr) == 0 {
-		tokenStr, _ = ctx.GetQuery("token")
-	}
-
-	tokenStr = strings.TrimSpace(tokenStr)
+	tokenStr := getTokenStr(ctx)
 
 	c, err := parseToken(tokenStr, secret)
 	if nil != err {
 		return nil, err
 	}
 
+	// 通用参数
 	c.IP = ctx.ClientIP()
-	return c, nil
+
+	tk := newTokenWith(c).WithSecret(secret)
+
+	return tk, nil
+}
+
+// ParseStatefulTokenWithGinSecret 解析有状态的 token
+func ParseStatefulTokenWithGinSecret(ctx *gin.Context, secret []byte) (string, *token, error) {
+	tokenStr := getTokenStr(ctx)
+
+	c, err := parseToken(tokenStr, secret)
+	if nil != err {
+		return "", nil, err
+	}
+
+	// 通用参数
+	c.IP = ctx.ClientIP()
+
+	tk := newTokenWith(c).WithSecret(secret)
+
+	return tokenStr, tk, nil
+}
+
+// getTokenStr 获取请求中的 token 字符串
+// 优先读取 http header 中的 X-Token 值；如果不存在，则读取 query string 中的 token 值
+func getTokenStr(ctx *gin.Context) string {
+	tokenStr := strings.TrimSpace(ctx.GetHeader(constant.HttpTokenHeaderKey))
+	if len(tokenStr) == 0 {
+		tokenStr, _ = ctx.GetQuery("token")
+	}
+
+	return strings.TrimSpace(tokenStr)
 }
 
 func parseToken(token string, secret []byte) (*claims, error) {
