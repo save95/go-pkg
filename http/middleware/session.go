@@ -39,3 +39,18 @@ func Session(keyPairs, secret string, opt SessionOption) gin.HandlerFunc {
 
 	return sessions.Sessions(keyPairs, store)
 }
+
+// SessionWithStore 校验 session
+// keyPairs cookie 键名
+func SessionWithStore(keyPairs string, store sessions.Store, opt SessionOption) gin.HandlerFunc {
+	store.Options(sessions.Options{
+		Path:     opt.Path,
+		Domain:   opt.Domain,
+		MaxAge:   int(opt.MaxAge.Seconds()), //seconds
+		Secure:   opt.Secure,
+		HttpOnly: opt.HttpOnly,
+		SameSite: opt.SameSite,
+	})
+
+	return sessions.Sessions(keyPairs, store)
+}
