@@ -9,10 +9,11 @@ import (
 )
 
 type jwtStatefulHandle struct {
-	ctx *gin.Context
-	opt *JWTOption
-
+	ctx   *gin.Context
+	opt   *JWTOption
 	store jwt.StatefulStore // token 状态处理器
+
+	skipCheckStateful bool // 跳过检查 token 状态
 }
 
 func newJWTStatefulHandle(ctx *gin.Context, opt *JWTOption, store jwt.StatefulStore) *jwtStatefulHandle {
@@ -20,6 +21,8 @@ func newJWTStatefulHandle(ctx *gin.Context, opt *JWTOption, store jwt.StatefulSt
 		ctx:   ctx,
 		opt:   opt,
 		store: store,
+
+		skipCheckStateful: store == nil,
 	}
 }
 
@@ -30,7 +33,7 @@ func (h *jwtStatefulHandle) handle() error {
 		return errors.New("jwt option empty")
 	}
 
-	if h.store == nil || h.store.Check == nil {
+	if !h.skipCheckStateful && h.store.Check == nil {
 		return errors.New("token is stateful, but checker undefined")
 	}
 
@@ -53,17 +56,19 @@ func (h *jwtStatefulHandle) handle() error {
 		return err
 	}
 
-	// 判断 jwt 是否为有状态，通过函数处理判断状态是否有效
-	if err := h.store.Check(user.GetID(), tokenStr); nil != err {
-		return err
-	}
+	if !h.skipCheckStateful {
+		// 判断 jwt 是否为有状态，通过函数处理判断状态是否有效
+		if err := h.store.Check(user.GetID(), tokenStr); nil != err {
+			return err
+		}
 
-	// 自动刷新 token
-	if h.opt.RefreshDuration > 0 {
-		token.RefreshNear(h.opt.RefreshDuration)
-		// 失败，则跳过，只处理成功的情况
-		if newToken, err := token.ToString(); nil == err {
-			h.ctx.Header(constant.HttpTokenHeaderKey, newToken)
+		// 自动刷新 token
+		if h.opt.RefreshDuration > 0 {
+			token.RefreshNear(h.opt.RefreshDuration)
+			// 失败，则跳过，只处理成功的情况
+			if newToken, err := token.ToString(); nil == err {
+				h.ctx.Header(constant.HttpTokenHeaderKey, newToken)
+			}
 		}
 	}
 
