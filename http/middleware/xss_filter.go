@@ -28,8 +28,9 @@ type xssFilter struct {
 }
 
 type xssRuleItem struct {
-	policy    *bluemonday.Policy
-	skipField map[string]struct{}
+	policy     *bluemonday.Policy
+	fieldRules map[string]*bluemonday.Policy
+	skipField  map[string]struct{}
 }
 
 // XSSPolicy XSS 策略
@@ -48,6 +49,18 @@ const (
 func XSSGlobalPolicy(p XSSPolicy) func(xf *xssFilter) {
 	return func(xf *xssFilter) {
 		xf.policy = xf.makePolicy(p)
+	}
+}
+
+// XSSGlobalFieldPolicy 指定全局字段过滤策略
+func XSSGlobalFieldPolicy(p XSSPolicy, fields ...string) func(xf *xssFilter) {
+	return func(xf *xssFilter) {
+		if xf.fieldRules == nil {
+			xf.fieldRules = make(map[string]*bluemonday.Policy, 0)
+		}
+		for _, field := range fields {
+			xf.fieldRules[field] = xf.makePolicy(p)
+		}
 	}
 }
 
@@ -81,16 +94,42 @@ func XSSRoutePolicy(routeRule string, policy XSSPolicy, skipFields ...string) fu
 	}
 }
 
+// XSSRouteFieldPolicy 指定路由的字段策略
+// routeRule 路由规则，如果路由包含该字符串则匹配成功
+func XSSRouteFieldPolicy(routeRule string, policy XSSPolicy, fields ...string) func(xf *xssFilter) {
+	return func(xf *xssFilter) {
+		if policy == XSSPolicyNone {
+			xf.skipRoutes[routeRule] = struct{}{}
+			return
+		}
+
+		rp, ok := xf.routePolicies[routeRule]
+		if !ok {
+			rp = &xssRuleItem{
+				policy:     xf.policy,
+				fieldRules: make(map[string]*bluemonday.Policy, 0),
+				skipField:  make(map[string]struct{}, 0),
+			}
+		}
+		for _, field := range fields {
+			rp.fieldRules[field] = xf.makePolicy(policy)
+		}
+		xf.routePolicies[routeRule] = rp
+	}
+}
+
 // XSSFilter XSS 过滤
 // usage:
 // r.Use(middleware.XSSFilter(
 //  	// middleware.XSSDebug(),
 //  	middleware.XSSGlobalPolicy(middleware.XSSPolicyStrict),
+//  	middleware.XSSGlobalFieldPolicy(middleware.XSSPolicyUGC, "content"),
 //  	middleware.XSSGlobalSkipFields("password"),
 //  	middleware.XSSRoutePolicy("admin", middleware.XSSPolicyUGC),
 //  	middleware.XSSRoutePolicy("/callback/", middleware.XSSPolicyNone),
 //  	middleware.XSSRoutePolicy("/endpoint", middleware.XSSPolicyNone),
 //  	middleware.XSSRoutePolicy("/ping", middleware.XSSPolicyNone),
+//  	middleware.XSSRouteFieldPolicy("/user/orders", middleware.XSSPolicyUGC, "details"),
 // ))
 func XSSFilter(opts ...func(xf *xssFilter)) gin.HandlerFunc {
 	xf := &xssFilter{
@@ -198,10 +237,18 @@ func (xf *xssFilter) filterXSS(fullPath, key, val string) string {
 				xf.debugf("xss filter hit route skip field, return origin value\n")
 				return val
 			}
+
+			fieldPolicy, ok := item.fieldRules[key]
+			if ok && fieldPolicy != nil {
+				xf.debugf("xss filter hit route field rule, return sanitize value\n")
+				return fieldPolicy.Sanitize(val)
+			}
+
 			if item.policy == nil {
 				xf.debugf("xss filter hit route rule, none policy, return origin value\n")
 				return val
 			}
+
 			xf.debugf("xss filter hit route rule, return sanitize value\n")
 			return item.policy.Sanitize(val)
 		}
@@ -210,6 +257,12 @@ func (xf *xssFilter) filterXSS(fullPath, key, val string) string {
 	if _, ok := xf.skipField[key]; ok {
 		xf.debugf("xss filter hit global skip field, return origin value\n")
 		return val
+	}
+
+	fieldPolicy, ok := xf.fieldRules[key]
+	if ok && fieldPolicy != nil {
+		xf.debugf("xss filter hit global field rule, return sanitize value\n")
+		return fieldPolicy.Sanitize(val)
 	}
 
 	if xf.policy == nil {
