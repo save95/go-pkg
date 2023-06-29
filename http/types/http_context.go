@@ -28,6 +28,13 @@ func (sc *HttpContext) User() *User {
 	return sc.user
 }
 
+func (sc *HttpContext) GetUser() *User {
+	if sc.user == nil {
+		return &User{}
+	}
+	return sc.user
+}
+
 func (sc *HttpContext) Logger() xlog.XLogger {
 	return sc.logger
 }
