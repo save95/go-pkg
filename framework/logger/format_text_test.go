@@ -30,7 +30,7 @@ func TestFormat_Format(t *testing.T) {
 		Context: nil,
 	}
 
-	f := &Format{}
+	f := &formatText{}
 	b, e := f.Format(entry)
 	if nil != e {
 		t.Error(e)
