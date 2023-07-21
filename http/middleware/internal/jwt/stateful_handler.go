@@ -1,4 +1,4 @@
-package middleware
+package jwt
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,16 +8,16 @@ import (
 	"github.com/save95/go-pkg/http/types"
 )
 
-type jwtStatefulHandle struct {
+type statefulHandler struct {
 	ctx   *gin.Context
-	opt   *JWTOption
+	opt   *jwt.Option
 	store jwt.StatefulStore // token 状态处理器
 
 	skipCheckStateful bool // 跳过检查 token 状态
 }
 
-func newJWTStatefulHandle(ctx *gin.Context, opt *JWTOption, store jwt.StatefulStore) *jwtStatefulHandle {
-	return &jwtStatefulHandle{
+func NewStatefulHandler(ctx *gin.Context, opt *jwt.Option, store jwt.StatefulStore) IHandler {
+	return &statefulHandler{
 		ctx:   ctx,
 		opt:   opt,
 		store: store,
@@ -26,9 +26,9 @@ func newJWTStatefulHandle(ctx *gin.Context, opt *JWTOption, store jwt.StatefulSt
 	}
 }
 
-// 鉴权处理
+// Handle 鉴权处理
 // 只负责验证是否登陆，不处理其他事务
-func (h *jwtStatefulHandle) handle() error {
+func (h *statefulHandler) Handle() error {
 	if h.opt == nil || h.opt.RoleConvert == nil {
 		return errors.New("jwt option empty")
 	}
@@ -37,7 +37,7 @@ func (h *jwtStatefulHandle) handle() error {
 		return errors.New("token is stateful, but checker undefined")
 	}
 
-	tokenStr, token, err := jwt.ParseStatefulTokenWithGinSecret(h.ctx, h.opt.Secret)
+	tokenStr, token, err := jwt.ParseTokenWithSecret(h.ctx, h.opt.Secret)
 	if nil != err {
 		return errors.WithMessage(err, "token error")
 	}

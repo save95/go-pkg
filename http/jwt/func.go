@@ -12,28 +12,12 @@ import (
 // ParseTokenWithGin 通过 gin.Context 初始化 token
 // 从 gin.Context 优先读取 http header 中的 X-Token 值；如果不存在，则读取 query string 中的 token 值
 func ParseTokenWithGin(ctx *gin.Context) (*token, error) {
-	return ParseTokenWithGinSecret(ctx, jwtSecret)
+	_, tk, err := ParseTokenWithSecret(ctx, jwtSecret)
+	return tk, err
 }
 
-// ParseTokenWithGinSecret 解析 token
-func ParseTokenWithGinSecret(ctx *gin.Context, secret []byte) (*token, error) {
-	tokenStr := getTokenStr(ctx)
-
-	c, err := parseToken(tokenStr, secret)
-	if nil != err {
-		return nil, err
-	}
-
-	// 通用参数
-	c.IP = ctx.ClientIP()
-
-	tk := newTokenWith(c).WithSecret(secret)
-
-	return tk, nil
-}
-
-// ParseStatefulTokenWithGinSecret 解析有状态的 token
-func ParseStatefulTokenWithGinSecret(ctx *gin.Context, secret []byte) (string, *token, error) {
+// ParseTokenWithSecret 解析 token
+func ParseTokenWithSecret(ctx *gin.Context, secret []byte) (string, *token, error) {
 	tokenStr := getTokenStr(ctx)
 
 	c, err := parseToken(tokenStr, secret)
@@ -47,6 +31,19 @@ func ParseStatefulTokenWithGinSecret(ctx *gin.Context, secret []byte) (string, *
 	tk := newTokenWith(c).WithSecret(secret)
 
 	return tokenStr, tk, nil
+}
+
+// ParseTokenWithGinSecret 解析 token
+// Deprecated. use ParseTokenWithSecret
+func ParseTokenWithGinSecret(ctx *gin.Context, secret []byte) (*token, error) {
+	_, tk, err := ParseTokenWithSecret(ctx, secret)
+	return tk, err
+}
+
+// ParseStatefulTokenWithGinSecret 解析有状态的 token
+// Deprecated. use ParseTokenWithSecret
+func ParseStatefulTokenWithGinSecret(ctx *gin.Context, secret []byte) (string, *token, error) {
+	return ParseTokenWithSecret(ctx, jwtSecret)
 }
 
 // getTokenStr 获取请求中的 token 字符串

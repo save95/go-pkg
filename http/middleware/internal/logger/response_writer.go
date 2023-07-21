@@ -1,4 +1,4 @@
-package restful
+package logger
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ type responseWriter struct {
 	body *bytes.Buffer
 }
 
-func NewResponseWriter(w gin.ResponseWriter) *responseWriter {
+func newResponseWriter(w gin.ResponseWriter) *responseWriter {
 	return &responseWriter{
 		ResponseWriter: w,
 		body:           &bytes.Buffer{},

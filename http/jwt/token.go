@@ -214,7 +214,7 @@ func (t *token) ToString() (string, error) {
 
 	// 如果是有状态的
 	if t.claims.Stateful {
-		if t.statefulHandler == nil || t.statefulHandler.Save == nil {
+		if t.statefulHandler == nil {
 			return "", errors.New("jwt stateful saver error")
 		}
 		// 存储 token 状态

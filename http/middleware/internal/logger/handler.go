@@ -1,4 +1,4 @@
-package restful
+package logger
 
 import (
 	"bytes"
@@ -14,17 +14,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type httpLogger struct {
+type handler struct {
 	ctx        *gin.Context
 	respWriter *responseWriter
 
 	retractive string
 }
 
-func NewHttpLogger(ctx *gin.Context) *httpLogger {
-	hl := &httpLogger{
+func New(ctx *gin.Context) ILogger {
+	hl := &handler{
 		ctx:        ctx,
-		respWriter: NewResponseWriter(ctx.Writer),
+		respWriter: newResponseWriter(ctx.Writer),
 		retractive: "   ",
 	}
 
@@ -33,7 +33,7 @@ func NewHttpLogger(ctx *gin.Context) *httpLogger {
 	return hl
 }
 
-func (f httpLogger) String() string {
+func (f handler) String() string {
 	return fmt.Sprintf(
 		"api: %s%s%s%s",
 		f.general(),
@@ -43,7 +43,7 @@ func (f httpLogger) String() string {
 	)
 }
 
-func (f httpLogger) general() string {
+func (f handler) general() string {
 	var bf bytes.Buffer
 	bf.WriteString("\n[")
 	bf.WriteString(f.ctx.Request.Method)
@@ -53,7 +53,7 @@ func (f httpLogger) general() string {
 	return bf.String()
 }
 
-func (f httpLogger) request() string {
+func (f handler) request() string {
 	var bs bytes.Buffer
 	bs.WriteString("\n\n[Request] ")
 	bs.WriteString(f.printHeader(f.ctx.Request.Header))
@@ -62,7 +62,7 @@ func (f httpLogger) request() string {
 	return bs.String()
 }
 
-func (f httpLogger) printHeader(headers http.Header) string {
+func (f handler) printHeader(headers http.Header) string {
 	var bf bytes.Buffer
 	bf.WriteString("\n [HEADER] ")
 
@@ -77,7 +77,7 @@ func (f httpLogger) printHeader(headers http.Header) string {
 	return bf.String()
 }
 
-func (f httpLogger) printRequestPayload() string {
+func (f handler) printRequestPayload() string {
 	var bf bytes.Buffer
 
 	// 读取 request body 失败，则在日志中显示
@@ -130,7 +130,7 @@ func (f httpLogger) printRequestPayload() string {
 	return bf.String()
 }
 
-func (f httpLogger) response() string {
+func (f handler) response() string {
 	var bs bytes.Buffer
 	bs.WriteString("\n\n[Response] ")
 	bs.WriteString("\n [STATUS] ")
@@ -151,7 +151,7 @@ func (f httpLogger) response() string {
 	return bs.String()
 }
 
-func (f httpLogger) error() string {
+func (f handler) error() string {
 	errors := f.ctx.Errors.ByType(gin.ErrorTypeAny)
 	if len(errors) == 0 {
 		return ""
@@ -165,7 +165,7 @@ func (f httpLogger) error() string {
 	return f.printError(errors[0].Err)
 }
 
-func (f httpLogger) printError(err error) string {
+func (f handler) printError(err error) string {
 	if nil == err {
 		return ""
 	}
