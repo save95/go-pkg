@@ -37,10 +37,32 @@ func (u *User) GetName() string {
 
 func (u *User) GetRoles() []IRole {
 	if nil == u {
-		return nil
+		return []IRole{}
 	}
 
 	return u.Roles
+}
+
+func (u *User) Is(role IRole, others ...IRole) bool {
+	if u == nil || u.Roles == nil || len(u.Roles) == 0 {
+		return false
+	}
+
+	// 已存在的角色
+	bes := make(map[IRole]struct{}, 0)
+	for _, role := range u.Roles {
+		bes[role] = struct{}{}
+	}
+
+	roles := []IRole{role}
+	roles = append(roles, others...)
+	for _, role := range roles {
+		if _, ok := bes[role]; ok {
+			return true
+		}
+	}
+
+	return false
 }
 
 func (u *User) GetIP() string {
@@ -57,4 +79,9 @@ func (u *User) GetExtend() map[string]string {
 	}
 
 	return u.Extend
+}
+
+func (u *User) GetExtendValue(field string) string {
+	extend := u.GetExtend()
+	return extend[field]
 }

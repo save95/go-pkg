@@ -2,6 +2,7 @@ package restful
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"math"
@@ -15,7 +16,7 @@ import (
 	"github.com/save95/go-pkg/constant"
 	"github.com/save95/go-pkg/framework/logger"
 	"github.com/save95/go-pkg/http/types"
-	"github.com/save95/go-pkg/utils/strutil"
+	"github.com/save95/go-utils/strutil"
 	"github.com/save95/xerror"
 	"github.com/save95/xlog"
 )
@@ -23,24 +24,33 @@ import (
 type response struct {
 	ctx    *gin.Context
 	logger xlog.XLog
+
+	languageHeaderKey string
+	msgHandler        func(code int, language string) string
 }
 
 // NewResponse 创建 Restful 标准响应生成器
-func NewResponse(ctx *gin.Context) *response {
+func NewResponse(ctx *gin.Context, opts ...func(*response)) IResponse {
 	var log xlog.XLog
 
-	htx, err := types.ParserHttpContext(ctx)
+	htx, err := types.MustParseHttpContext(ctx)
 	if nil != err {
 		log = logger.NewDefaultLogger()
 	} else {
 		log = htx.Logger()
 	}
 
-	return &response{ctx: ctx, logger: log}
+	resp := &response{ctx: ctx, logger: log}
+
+	for _, opt := range opts {
+		opt(resp)
+	}
+
+	return resp
 }
 
 // SetHeader 设置请求头
-func (r *response) SetHeader(key, value string) *response {
+func (r *response) SetHeader(key, value string) IResponse {
 	// 必须使用自定义头 X- 开始才设置，否则跳过
 	if !strings.HasPrefix(key, "X-") && !strings.HasPrefix(key, "x-") {
 		return r
@@ -61,16 +71,43 @@ func (r *response) Retrieve(entity interface{}) {
 	r.ctx.AbortWithStatusJSON(http.StatusOK, entity)
 }
 
-// ListWithPagination 分页列表的响应
-func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
-	tk := reflect.TypeOf(entities).Kind()
-	if tk != reflect.Slice && tk != reflect.Array {
-		r.WithError(xerror.New("response data type error"))
-		return
+// TableWithPagination 表格分页响应
+func (r *response) TableWithPagination(resp *TableResponse) {
+	// 写响应页码
+	r.writeResponsePagination(resp.TotalRow)
+
+	rows := make(map[string]map[string]interface{}, 0)
+	for _, item := range resp.Items {
+		row, ok := rows[item.RowKey]
+		if !ok {
+			row = make(map[string]interface{}, 0)
+		}
+
+		row[item.Column] = item.Data
+		rows[item.RowKey] = row
 	}
 
+	extends := make(map[string]interface{}, 0)
+	for _, item := range resp.Extends {
+		if _, ok := extends[item.RowKey]; !ok {
+			extends[item.RowKey] = item.Data
+		}
+	}
+
+	//r.ctx.Header("Content-MD5", "")
+
+	r.ctx.AbortWithStatusJSON(http.StatusOK, map[string]interface{}{
+		"columns": resp.Columns,
+		"rowKeys": resp.RowKeys,
+		"data":    rows,
+		"extends": extends,
+	})
+}
+
+// writeResponsePagination 写响应的分页数据
+func (r *response) writeResponsePagination(totalRow uint) {
 	// 设置总记录数
-	r.ctx.Header("X-Total-Count", strconv.Itoa(int(totalRow)))
+	r.ctx.Header(TotalCountHeaderKey, strconv.Itoa(int(totalRow)))
 
 	// 解析URL，Query string
 	currentUri := r.ctx.Request.RequestURI
@@ -89,7 +126,7 @@ func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
 	count := uint(math.Max(1, float64(totalRow/uint(limit))))
 
 	// 设置分页信息
-	r.ctx.Header("X-Pagination-Info", fmt.Sprintf(
+	r.ctx.Header(PageInfoHeaderKey, fmt.Sprintf(
 		`count="%d", rows="%d", current="%d", size="%d"`,
 		count,
 		totalRow,
@@ -117,7 +154,19 @@ func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
 		firstUri,
 		lastUri,
 	)
-	r.ctx.Header("Link", links)
+	r.ctx.Header(PageLinkHeaderKey, links)
+}
+
+// ListWithPagination 分页列表的响应
+func (r *response) ListWithPagination(totalRow uint, entities interface{}) {
+	tk := reflect.TypeOf(entities).Kind()
+	if tk != reflect.Slice && tk != reflect.Array {
+		r.WithError(xerror.New("response data type error"))
+		return
+	}
+
+	// 写响应页码
+	r.writeResponsePagination(totalRow)
 
 	//r.ctx.Header("Content-MD5", "")
 
@@ -153,7 +202,7 @@ func (r *response) ListWithMoreFlag(hasMore bool, entities interface{}) {
 	//	hasMore = false
 	//}
 
-	r.ctx.Header("X-More-Resource", strconv.FormatBool(hasMore))
+	r.ctx.Header(HasMoreHeaderKey, strconv.FormatBool(hasMore))
 
 	if reflect.ValueOf(entities).IsNil() {
 		entities = make([]interface{}, 0)
@@ -228,7 +277,7 @@ func (r *response) WithError(err error) {
 	}
 
 	rq := r.ctx.Request
-	if stx, se := types.ParserHttpContext(r.ctx); nil == se {
+	if stx, se := types.MustParseHttpContext(r.ctx); nil == se {
 		bs := stx.Value(constant.HttpCustomRawRequestBodyKey).([]byte)
 		rq.Body = ioutil.NopCloser(bytes.NewBuffer(bs))
 	}
@@ -236,9 +285,20 @@ func (r *response) WithError(err error) {
 	_ = r.ctx.Error(err)
 
 	if e, ok := err.(xerror.XError); ok {
-		r.ctx.Header("X-Error-Code", strconv.Itoa(e.ErrorCode()))
+		r.ctx.Header(ErrorCodeHeaderKey, strconv.Itoa(e.ErrorCode()))
+
+		language := r.ctx.GetHeader(r.languageHeaderKey)
+
+		msg := e.String()
+		if r.msgHandler != nil {
+			str := r.msgHandler(e.ErrorCode(), language)
+			if len(str) > 0 {
+				msg = str
+			}
+		}
+
 		r.ctx.AbortWithStatusJSON(e.HttpStatus(), gin.H{
-			"message": e.String(),
+			"message": msg,
 		})
 		return
 	}
@@ -246,4 +306,19 @@ func (r *response) WithError(err error) {
 	r.ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 		"message": err.Error(),
 	})
+}
+
+// WithErrorData 响应错误消息(HttpStatus!=200)，并在 header 中返回错误数据
+func (r *response) WithErrorData(err error, data interface{}) {
+	bs, err1 := json.Marshal(data)
+	if nil != err1 {
+		r.ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
+			"message": "error data marshal failed: " + err1.Error(),
+		})
+		return
+	}
+
+	r.ctx.Header(ErrorDataHeaderKey, string(bs))
+
+	r.WithError(err)
 }

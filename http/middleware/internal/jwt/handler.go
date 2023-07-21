@@ -1,4 +1,4 @@
-package middleware
+package jwt
 
 import (
 	"github.com/gin-gonic/gin"
@@ -8,44 +8,40 @@ import (
 	"github.com/save95/go-pkg/http/types"
 )
 
-type jwtHandle struct {
-	ctx *gin.Context
-	opt *JWTOption
+type IHandler interface {
+	Handle() error
 }
 
-func newJWTHandle(ctx *gin.Context, opt *JWTOption) *jwtHandle {
-	return &jwtHandle{
+type handler struct {
+	ctx *gin.Context
+	opt *jwt.Option
+}
+
+func NewHandler(ctx *gin.Context, opt *jwt.Option) IHandler {
+	return &handler{
 		ctx: ctx,
 		opt: opt,
 	}
 }
 
-// 鉴权处理
+// Handle 鉴权处理
 // 只负责验证是否登陆，不处理其他事务
-func (h *jwtHandle) handle() error {
+func (h *handler) Handle() error {
 	if h.opt == nil || h.opt.RoleConvert == nil {
-		if h.opt.SilentMode {
-			return nil
-		} else {
-			return errors.New("jwt option empty")
-		}
+		return errors.New("jwt option empty")
 	}
 
-	token, err := jwt.ParseTokenWithGinSecret(h.ctx, h.opt.Secret)
+	_, token, err := jwt.ParseTokenWithSecret(h.ctx, h.opt.Secret)
 	if nil != err {
-		if h.opt.SilentMode {
-			return nil
-		} else {
-			return errors.WithMessage(err, "登录信息错误, 请重新登录")
-		}
+		return errors.WithMessage(err, "token error")
 	}
 
 	if token.IsExpired() {
-		if h.opt.SilentMode {
-			return nil
-		} else {
-			return errors.New("登录信息过期, 请重新登录")
-		}
+		return errors.New("token expired")
+	}
+
+	if token.IsStateful() {
+		return errors.New("token is stateful, please use middleware.JWTStatefulWith")
 	}
 
 	// 自动刷新 token

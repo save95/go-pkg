@@ -2,17 +2,22 @@ package middleware
 
 import (
 	"github.com/gin-gonic/gin"
-	r "github.com/save95/go-pkg/http/restful"
+	"github.com/save95/go-pkg/http/middleware/internal/logger"
 	"github.com/save95/xlog"
 )
 
 // HttpPrinter 打印 http 信息中间件；展示 request / response 等信息
-func HttpPrinter(logger xlog.XLog) gin.HandlerFunc {
+//
+// usage:
+//   r.Use(middleware.HttpContext(global.Log))
+//
+//   router.Any("/endpoint", middleware.HttpPrinter(global.Log), ping.Controller{}.Endpoint)
+func HttpPrinter(log xlog.XLog) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		l := r.NewHttpLogger(c)
+		l := logger.New(c)
 
 		c.Next()
 
-		logger.Info(l.String())
+		log.Info(l.String())
 	}
 }

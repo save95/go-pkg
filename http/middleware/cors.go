@@ -3,40 +3,44 @@ package middleware
 import (
 	"time"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	"github.com/save95/go-pkg/http/middleware/internal/cors"
 )
 
 // CORS 跨域处理
-func CORS() gin.HandlerFunc {
-	return cors.New(corsHandler{}.getCORSConfig())
+//
+// usage:
+//   r.Use(middleware.CORS())
+//
+// 	 r.Use(middleware.CORS(
+//	 	middleware.WithCORSAllowOriginFunc(func(origin string) bool {
+//	 		//return origin == "https://xxxx.com"
+//	 		return true
+//	 	}),
+//	 	middleware.WithCORSAllowHeaders("X-Custom-Key"),
+//	 	middleware.WithCORSExposeHeaders("X-Custom-Key"),
+//	 	middleware.WithCORSMaxAge(24*time.Hour),
+//	 ))
+func CORS(opts ...cors.Option) gin.HandlerFunc {
+	return cors.New(opts...)
 }
 
-type corsHandler struct {
+func WithCORSAllowOriginFunc(fun func(origin string) bool) cors.Option {
+	return cors.WithAllowOriginFunc(fun)
 }
 
-func (ch corsHandler) getCORSConfig() cors.Config {
-	return cors.Config{
-		//AllowOrigins:     []string{"https://xxxx.com"},
-		AllowOriginFunc: func(origin string) bool {
-			//return origin == "https://xxxx.com"
-			return true
-		},
-		AllowMethods: []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders: []string{
-			"Origin", "Content-Type", "Accept", "User-Agent", "Cookie", "Authorization",
-			"X-Auth-Token", "X-Token", "X-Requested-With",
-			// https://www.npmjs.com/package/huge-uploader
-			"uploader-chunk-number", "uploader-chunks-total", "uploader-file-id",
-		},
-		AllowCredentials: true,
-		ExposeHeaders: []string{
-			"Authorization", "Content-MD5",
-			// 分页响应头
-			"Link", "X-More-Resource", "X-Pagination-Info", "X-Total-Count",
-			// 错误码响应
-			"X-Error-Code",
-		},
-		MaxAge: 12 * time.Hour,
-	}
+func WithCORSAllowMethods(methods ...string) cors.Option {
+	return cors.WithAllowMethods(methods...)
+}
+
+func WithCORSAllowHeaders(keys ...string) cors.Option {
+	return cors.WithAllowHeaders(keys...)
+}
+
+func WithCORSExposeHeaders(keys ...string) cors.Option {
+	return cors.WithExposeHeaders(keys...)
+}
+
+func WithCORSMaxAge(d time.Duration) cors.Option {
+	return cors.WithMaxAge(d)
 }

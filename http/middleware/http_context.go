@@ -10,6 +10,9 @@ import (
 )
 
 // HttpContext 注入自定义上下文
+//
+// usage:
+//   r.Use(middleware.HttpContext())
 func HttpContext() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		stx := types.NewHttpContext()

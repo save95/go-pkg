@@ -24,7 +24,13 @@ func NewHttpContext() *HttpContext {
 }
 
 // ParserHttpContext 从 gin 上下文中解析自定义上下文
+// Deprecated. use MustParseHttpContext
 func ParserHttpContext(ctx context.Context) (*HttpContext, error) {
+	return MustParseHttpContext(ctx)
+}
+
+// MustParseHttpContext 从 gin 上下文中解析自定义上下文
+func MustParseHttpContext(ctx context.Context) (*HttpContext, error) {
 	gtx, ok := ctx.(*gin.Context)
 	if !ok {
 		return nil, errors.New("to GinContext failed")

@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/robfig/cron/v3"
+	"github.com/save95/xerror"
 	"github.com/save95/xlog"
 )
 
@@ -26,21 +27,25 @@ func (j cronJob) Run() {
 	} else {
 		j.log.Debug(msg)
 	}
+	defer func() {
+		msg = fmt.Sprintf("[job] %s run end", j.jobName)
+		if nil == j.log {
+			log.Print(msg)
+		} else {
+			j.log.Debug(msg)
+		}
+	}()
 
 	if err := j.job.Run(); nil != err {
+		if xe, ok := err.(xerror.XError); ok {
+			err = xe.Unwrap()
+		}
 		msg := fmt.Sprintf("[job] %s run failed: %+v", j.jobName, err)
 		if nil == j.log {
 			log.Print(msg)
 		} else {
 			j.log.Error(msg)
 		}
-	}
-
-	msg = fmt.Sprintf("[job] %s run end", j.jobName)
-	if nil == j.log {
-		log.Print(msg)
-	} else {
-		j.log.Debug(msg)
 	}
 }
 

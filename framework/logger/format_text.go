@@ -8,10 +8,10 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-type Format struct {
+type formatText struct {
 }
 
-func (lf *Format) Format(entry *logrus.Entry) ([]byte, error) {
+func (lf *formatText) Format(entry *logrus.Entry) ([]byte, error) {
 
 	out := &bytes.Buffer{}
 	if entry.Buffer != nil {

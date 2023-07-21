@@ -1,6 +1,7 @@
 package jwt
 
 import (
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -14,11 +15,13 @@ type token struct {
 	issuedAt *time.Time    // 发行时间
 	duration time.Duration // 有效时长
 	secret   []byte        // 加密密钥
+
+	statefulHandler StatefulStore // token 状态处理器
 }
 
 // NewToken 初始化 Token
-// 默认发行人为 "go-pkg"，可以通过 SetIssuer 修改；
-// 默认有效期为 24h，可以通过 SetDuration 设置有效时长
+// 默认发行人为 "go-pkg"，可以通过 WithIssuer 修改；
+// 默认有效期为 24h，可以通过 WithDuration 设置有效时长
 func NewToken(user types.User) *token {
 	var jwtRoles []string
 	for i := range user.Roles {
@@ -34,6 +37,31 @@ func NewToken(user types.User) *token {
 		IP:     user.IP,
 		Extend: user.Extend,
 	})
+}
+
+// NewStatefulToken 初始化有状态的 Token
+// 默认发行人为 "go-pkg"，可以通过 WithIssuer 修改；
+// 默认有效期为 24h，可以通过 WithDuration 设置有效时长
+func NewStatefulToken(user types.User, handler StatefulStore) *token {
+	var jwtRoles []string
+	for i := range user.Roles {
+		jwtRoles = append(jwtRoles, user.Roles[i].String())
+	}
+
+	t := newTokenWith(&claims{
+		Stateful: true,
+
+		Account: user.Account,
+		UserID:  user.ID,
+		Name:    user.Name,
+		Roles:   jwtRoles,
+
+		IP:     user.IP,
+		Extend: user.Extend,
+	})
+	t.statefulHandler = handler
+
+	return t
 }
 
 func newTokenWith(c *claims) *token {
@@ -55,21 +83,21 @@ func newTokenWith(c *claims) *token {
 }
 
 // SetIssuer 设置 token 发行人，默认为 "go-pkg"
-// Deprecated
+// Deprecated use WithIssuer
 func (t *token) SetIssuer(issuer string) {
 	t.issuer = issuer
 	t.claims.Issuer = issuer
 }
 
 // SetDuration 设置 token 过期时长，默认为 24h
-// Deprecated
+// Deprecated use WithDuration
 func (t *token) SetDuration(d time.Duration) {
 	t.duration = d
 	t.claims.ExpiresAt = t.issuedAt.Add(d).Unix()
 }
 
 // SetSecret 设置 token 加密密钥，默认 "go-pkg.JwtSecret"
-// Deprecated
+// Deprecated use WithSecret
 func (t *token) SetSecret(secret []byte) {
 	if len(secret) == 0 {
 		secret = jwtSecret
@@ -150,6 +178,12 @@ func (t *token) rolesBy(fun types.ToRole) ([]types.IRole, error) {
 	return roles, nil
 }
 
+// IsStateful 是否为有状态 jwt token
+// 主要用于解决 jwt token 无状态，颁发后不可控。需要业务端注入处理函数
+func (t *token) IsStateful() bool {
+	return t.claims.Stateful
+}
+
 // IsExpired 是否过期
 func (t *token) IsExpired() bool {
 	return time.Now().Unix() > t.claims.ExpiresAt
@@ -173,5 +207,21 @@ func (t *token) ToString() (string, error) {
 	//t.Refresh()
 	tokenClaims := jwt.NewWithClaims(jwt.SigningMethodHS256, t.claims)
 
-	return tokenClaims.SignedString(t.secret)
+	tokenStr, err := tokenClaims.SignedString(t.secret)
+	if nil != err {
+		return "", err
+	}
+
+	// 如果是有状态的
+	if t.claims.Stateful {
+		if t.statefulHandler == nil {
+			return "", errors.New("jwt stateful saver error")
+		}
+		// 存储 token 状态
+		if err := t.statefulHandler.Save(t.claims.UserID, tokenStr, t.claims.ExpiresAt); nil != err {
+			return "", err
+		}
+	}
+
+	return tokenStr, nil
 }

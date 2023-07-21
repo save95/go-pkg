@@ -13,11 +13,12 @@ import (
 )
 
 type logger struct {
-	path     string     // 日志存放路径
-	category string     // 日志分类
-	stack    xlog.Stack // 日志存储方式
-	level    xlog.Level // 日志等级
-	engine   xlog.XLog  // 日志引擎
+	path      string     // 日志存放路径
+	category  string     // 日志分类
+	stack     xlog.Stack // 日志存储方式
+	level     xlog.Level // 日志等级
+	engine    xlog.XLog  // 日志引擎
+	formatter logrus.Formatter
 
 	traceId string
 }
@@ -49,11 +50,11 @@ func NewDefaultTraceLogger(traceId string) xlog.XLogger {
 	return NewLoggerWithTraceId(traceId, defaultDir, defaultCategory, xlog.DailyStack)
 }
 
-func NewLogger(path, category string, stack xlog.Stack) xlog.XLogger {
-	return NewLoggerWithTraceId("", path, category, stack)
+func NewLogger(path, category string, stack xlog.Stack, opts ...func(logger2 *logger)) xlog.XLogger {
+	return NewLoggerWithTraceId("", path, category, stack, opts...)
 }
 
-func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack) xlog.XLogger {
+func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack, opts ...func(logger2 *logger)) xlog.XLogger {
 	logger := &logger{
 		category: defaultCategory,
 		traceId:  traceId,
@@ -68,6 +69,11 @@ func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack) xlog
 	if err := logger.setStack(stack); nil != err {
 		fmt.Printf("logger setStack failed: %s\n", err.Error())
 	}
+
+	for _, opt := range opts {
+		opt(logger)
+	}
+
 	if err := logger.setEngine(); nil != err {
 		fmt.Printf("logger setEngine failed: %s\n", err.Error())
 	}
@@ -132,9 +138,13 @@ func (l *logger) setEngine() error {
 		return nil
 	}
 
+	if l.formatter == nil {
+		l.formatter = &formatText{}
+	}
+
 	// 初始化引擎
 	eg := logrus.New()
-	eg.SetFormatter(&Format{})
+	eg.SetFormatter(l.formatter)
 	eg.SetLevel(logrus.InfoLevel)
 	eg.SetOutput(os.Stdout)
 	l.engine = eg

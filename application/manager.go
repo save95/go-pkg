@@ -19,7 +19,7 @@ type manager struct {
 // opts 支持设置日志、注册应用
 // 日志必须实现了 xlog.XLog 接口
 // 注册应用必须实现了 IApplication 接口
-func NewManager(opts ...interface{}) *manager {
+func NewManager(opts ...interface{}) IManager {
 	m := &manager{}
 
 	for _, opt := range opts {
@@ -44,8 +44,8 @@ func NewManager(opts ...interface{}) *manager {
 }
 
 // Register 注册应用
-func (m *manager) Register(application IApplication) {
-	m.apps = append(m.apps, application)
+func (m *manager) Register(app IApplication) {
+	m.apps = append(m.apps, app)
 }
 
 // Run 启动应用
