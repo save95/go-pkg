@@ -2,7 +2,9 @@ package logger
 
 import "github.com/sirupsen/logrus"
 
-func WithFormat(format LogFormat) func(*logger) {
+type Option func(*logger)
+
+func WithFormat(format LogFormat) Option {
 	return func(l *logger) {
 		switch format {
 		case LogFormatJson:
@@ -13,7 +15,7 @@ func WithFormat(format LogFormat) func(*logger) {
 	}
 }
 
-func WithFormatter(formatter logrus.Formatter) func(*logger) {
+func WithFormatter(formatter logrus.Formatter) Option {
 	return func(l *logger) {
 		l.formatter = formatter
 	}

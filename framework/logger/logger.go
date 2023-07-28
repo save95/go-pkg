@@ -50,11 +50,11 @@ func NewDefaultTraceLogger(traceId string) xlog.XLogger {
 	return NewLoggerWithTraceId(traceId, defaultDir, defaultCategory, xlog.DailyStack)
 }
 
-func NewLogger(path, category string, stack xlog.Stack, opts ...func(logger2 *logger)) xlog.XLogger {
+func NewLogger(path, category string, stack xlog.Stack, opts ...Option) xlog.XLogger {
 	return NewLoggerWithTraceId("", path, category, stack, opts...)
 }
 
-func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack, opts ...func(logger2 *logger)) xlog.XLogger {
+func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack, opts ...Option) xlog.XLogger {
 	logger := &logger{
 		category: defaultCategory,
 		traceId:  traceId,
