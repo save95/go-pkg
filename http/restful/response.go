@@ -18,6 +18,7 @@ import (
 	"github.com/save95/go-pkg/http/types"
 	"github.com/save95/go-utils/strutil"
 	"github.com/save95/xerror"
+	"github.com/save95/xerror/xcode"
 	"github.com/save95/xlog"
 )
 
@@ -27,6 +28,8 @@ type response struct {
 
 	languageHeaderKey string
 	msgHandler        func(code int, language string) string
+
+	showErrorCodes []int
 }
 
 // NewResponse 创建 Restful 标准响应生成器
@@ -40,7 +43,11 @@ func NewResponse(ctx *gin.Context, opts ...func(*response)) IResponse {
 		log = htx.Logger()
 	}
 
-	resp := &response{ctx: ctx, logger: log}
+	resp := &response{
+		ctx:            ctx,
+		logger:         log,
+		showErrorCodes: make([]int, 0),
+	}
 
 	for _, opt := range opts {
 		opt(resp)
@@ -282,23 +289,15 @@ func (r *response) WithError(err error) {
 		rq.Body = ioutil.NopCloser(bytes.NewBuffer(bs))
 	}
 
+	// 设置错误
 	_ = r.ctx.Error(err)
 
 	if e, ok := err.(xerror.XError); ok {
+		// 设置错误码，方便前端使用
 		r.ctx.Header(ErrorCodeHeaderKey, strconv.Itoa(e.ErrorCode()))
 
-		language := r.ctx.GetHeader(r.languageHeaderKey)
-
-		msg := e.String()
-		if r.msgHandler != nil {
-			str := r.msgHandler(e.ErrorCode(), language)
-			if len(str) > 0 {
-				msg = str
-			}
-		}
-
 		r.ctx.AbortWithStatusJSON(e.HttpStatus(), gin.H{
-			"message": msg,
+			"message": r.getErrorMsg(e),
 		})
 		return
 	}
@@ -306,6 +305,46 @@ func (r *response) WithError(err error) {
 	r.ctx.AbortWithStatusJSON(http.StatusInternalServerError, gin.H{
 		"message": err.Error(),
 	})
+}
+
+func (r *response) inShowErrorCodes(code int) bool {
+	if len(r.showErrorCodes) == 0 {
+		return true
+	}
+
+	for _, c := range r.showErrorCodes {
+		if code == c {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (r *response) getErrorMsg(err xerror.XError) string {
+	// 默认展示统一响应为 InternalServerError(500)
+	msg := xcode.InternalServerError.String()
+
+	// 如果该错误码不需要向用户展示，则展示默认
+	// 否则，展示错误码的内容
+	if !r.inShowErrorCodes(err.ErrorCode()) {
+		return msg
+	}
+
+	msg = err.String()
+	// 未定义语言key，或未定义消息处理器，则返回原始消息
+	if len(r.languageHeaderKey) == 0 || r.msgHandler == nil {
+		return msg
+	}
+
+	// 获取访问语言，并处理对应语言
+	language := r.ctx.GetHeader(r.languageHeaderKey)
+	str := r.msgHandler(err.ErrorCode(), language)
+	if len(str) > 0 {
+		return str
+	}
+
+	return msg
 }
 
 // WithErrorData 响应错误消息(HttpStatus!=200)，并在 header 中返回错误数据

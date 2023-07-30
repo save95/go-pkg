@@ -423,8 +423,8 @@ github.com/samuel/go-zookeeper v0.0.0-20190923202752-2cc03de413da/go.mod h1:gi+0
 github.com/save95/go-utils v1.0.4-0.20230628150415-96036c0da336 h1:emkYALNAyyldA+YLWBLiQwPLiirxsi58kCuPpnZUbJw=
 github.com/save95/go-utils v1.0.4-0.20230628150415-96036c0da336/go.mod h1:aKN7VFk3dVHVOyY8SSzRtut7bj6xm0JT/3bOwHMP5+g=
 github.com/save95/xerror v1.0.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
-github.com/save95/xerror v1.1.0 h1:OO4RIW56F9ppG5UZ+bTPOoP3+LzbI2ZKxJfa6pnS2l8=
-github.com/save95/xerror v1.1.0/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
+github.com/save95/xerror v1.1.2 h1:ZhP0HtxQUJ7F1nKKqSbsQexcg6yi3B3EXre4EInvFpU=
+github.com/save95/xerror v1.1.2/go.mod h1:fGFpEoyM6n6guEXSJoKkkIFiEodliklSoxA/q9DHt4Q=
 github.com/save95/xlog v0.0.1 h1:OeyH7cVMvVA2VnKhSmlLWCZ35U90KsLDFagyDL9nOes=
 github.com/save95/xlog v0.0.1/go.mod h1:OYTVzpCxV1rO7KyXhwh20qC3qG7uL7LxLom421IyGck=
 github.com/sean-/seed v0.0.0-20170313163322-e2103e2c3529/go.mod h1:DxrIzT+xaE7yg65j358z/aeFdxmN0P9QXhEzd20vsDc=

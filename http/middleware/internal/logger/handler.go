@@ -2,6 +2,8 @@ package logger
 
 import (
 	"bytes"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -152,8 +154,8 @@ func (f handler) response() string {
 }
 
 func (f handler) error() string {
-	errors := f.ctx.Errors.ByType(gin.ErrorTypeAny)
-	if len(errors) == 0 {
+	errs := f.ctx.Errors.ByType(gin.ErrorTypeAny)
+	if len(errs) == 0 {
 		return ""
 	}
 
@@ -162,7 +164,7 @@ func (f handler) error() string {
 	//	err = err.Err
 	//}
 
-	return f.printError(errors[0].Err)
+	return f.printError(errs[0].Err)
 }
 
 func (f handler) printError(err error) string {
@@ -174,11 +176,28 @@ func (f handler) printError(err error) string {
 	bs.WriteString("\n\n[Error] \n")
 	bs.WriteString(f.retractive)
 	bs.WriteString(err.Error())
+
+	// 如果是 xerror，展示 xfield 内容
+	if xf, ok := err.(xerror.XFields); ok {
+		fields := xf.GetFields()
+		if fields != nil && len(fields) > 0 {
+			bs.WriteByte('\n')
+			bs.WriteString(" [FIELDS] \n")
+			bs.WriteString(f.retractive)
+
+			//jsonIndentStr := f.retractive + f.retractive + f.retractive
+			//xfbs, _ := json.MarshalIndent(fields, "", jsonIndentStr)
+			xfbs, _ := json.Marshal(fields)
+			bs.WriteString(string(xfbs))
+		}
+	}
+
 	bs.WriteByte('\n')
 	bs.WriteString(" [STACK] \n")
 
 	//stack := fmt.Sprintf("%s%+v", f.retractive, err)
-	if xe, ok := err.(xerror.XError); ok {
+	var xe xerror.XError
+	if errors.As(err, &xe) {
 		err = xe.Unwrap()
 	}
 	stack := strings.ReplaceAll(fmt.Sprintf("%s%+v", f.retractive, err), "\n", "\n"+f.retractive)

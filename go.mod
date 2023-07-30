@@ -22,7 +22,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/save95/go-utils v1.0.4-0.20230628150415-96036c0da336
-	github.com/save95/xerror v1.1.0
+	github.com/save95/xerror v1.1.2
 	github.com/save95/xlog v0.0.1
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.1
