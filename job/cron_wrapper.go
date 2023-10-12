@@ -3,7 +3,6 @@ package job
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 
 	"github.com/robfig/cron/v3"
@@ -12,6 +11,8 @@ import (
 
 type cronJobWrapper struct {
 	maxRetry uint8 // 最大重试次数
+
+	failedSaver func(jobName string, in []string, err error) // 错误记录器
 
 	ctx context.Context
 	log xlog.XLogger
@@ -30,19 +31,13 @@ func NewCronJobWrapper(opts ...WrapperOption) IWrapper {
 func (w *cronJobWrapper) FromCommandJob(job ICommandJob, args ...string) cron.Job {
 	name := strings.Trim(fmt.Sprintf("%T", job), "*")
 
-	msg := fmt.Sprintf("[job] %s register", name)
-	if w.log == nil {
-		log.Print(msg)
-	} else {
-		w.log.Info(msg)
-	}
-
 	return &commandJob{
-		jobName:  name,
-		job:      job,
-		args:     args,
-		maxRetry: w.maxRetry,
-		ctx:      w.ctx,
-		log:      w.log,
+		jobName:     name,
+		job:         job,
+		args:        args,
+		maxRetry:    w.maxRetry,
+		failedSaver: w.failedSaver,
+		ctx:         w.ctx,
+		log:         w.log,
 	}
 }

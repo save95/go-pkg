@@ -25,3 +25,9 @@ func WrapWithMaxRetry(retry uint8) WrapperOption {
 		job.maxRetry = retry
 	}
 }
+
+func WrapWithFailedSaver(saver func(jobName string, in []string, err error)) WrapperOption {
+	return func(job *cronJobWrapper) {
+		job.failedSaver = saver
+	}
+}
