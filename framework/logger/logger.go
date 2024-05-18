@@ -43,11 +43,11 @@ func (l *logger) SetFieldFormatter(f xlog.XFieldFormatter) {
 }
 
 func NewDefaultLogger() xlog.XLogger {
-	return NewLoggerWithTraceId("", defaultDir, defaultCategory, xlog.DailyStack)
+	return NewLoggerWithTraceId("", getDefaultDir(), defaultCategory, xlog.DailyStack)
 }
 
 func NewDefaultTraceLogger(traceId string) xlog.XLogger {
-	return NewLoggerWithTraceId(traceId, defaultDir, defaultCategory, xlog.DailyStack)
+	return NewLoggerWithTraceId(traceId, getDefaultDir(), defaultCategory, xlog.DailyStack)
 }
 
 func NewLogger(path, category string, stack xlog.Stack, opts ...Option) xlog.XLogger {
@@ -55,30 +55,30 @@ func NewLogger(path, category string, stack xlog.Stack, opts ...Option) xlog.XLo
 }
 
 func NewLoggerWithTraceId(traceId, path, category string, stack xlog.Stack, opts ...Option) xlog.XLogger {
-	logger := &logger{
+	l := &logger{
 		category: defaultCategory,
 		traceId:  traceId,
 	}
 
-	if err := logger.setPath(path); nil != err {
+	if err := l.setPath(path); nil != err {
 		fmt.Printf("logger setPath failed: %s\n", err.Error())
 	}
-	if err := logger.setCategory(category); nil != err {
+	if err := l.setCategory(category); nil != err {
 		fmt.Printf("logger setCategory failed: %s\n", err.Error())
 	}
-	if err := logger.setStack(stack); nil != err {
+	if err := l.setStack(stack); nil != err {
 		fmt.Printf("logger setStack failed: %s\n", err.Error())
 	}
 
 	for _, opt := range opts {
-		opt(logger)
+		opt(l)
 	}
 
-	if err := logger.setEngine(); nil != err {
+	if err := l.setEngine(); nil != err {
 		fmt.Printf("logger setEngine failed: %s\n", err.Error())
 	}
 
-	return logger
+	return l
 }
 
 func (l *logger) setPath(path string) error {
@@ -128,6 +128,10 @@ func (l *logger) getFilenamePatten() string {
 	switch l.stack {
 	case xlog.DailyStack:
 		filename = "%Y-%m-%d.log"
+	case xlog.SingleStack:
+		filename = defaultFilenameFormat
+	default:
+		filename = defaultFilenameFormat
 	}
 
 	return filename

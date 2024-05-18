@@ -14,7 +14,7 @@ import (
 func JWTWith(opt *jwt.Option) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := mjwt.NewHandler(c, opt).Handle(); err != nil {
-			fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
+			//fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
 			// 非静默模式，响应错误
 			if !opt.SilentMode {
 				_ = c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("unauthorized"))
@@ -44,7 +44,7 @@ func JWTWith(opt *jwt.Option) gin.HandlerFunc {
 func JWTStatefulWith(opt *jwt.Option, handler jwt.StatefulStore) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := mjwt.NewStatefulHandler(c, opt, handler).Handle(); err != nil {
-			fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
+			//fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
 			// 非静默模式，响应错误
 			if !opt.SilentMode {
 				_ = c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("unauthorized"))
@@ -60,7 +60,7 @@ func JWTStatefulWith(opt *jwt.Option, handler jwt.StatefulStore) gin.HandlerFunc
 func JWTStatefulWithout(opt *jwt.Option) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if err := mjwt.NewStatefulHandler(c, opt, nil).Handle(); err != nil {
-			fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
+			//fmt.Printf("Unauthorized, slientMode=%v\n", opt.SilentMode)
 			// 非静默模式，响应错误
 			if !opt.SilentMode {
 				_ = c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("unauthorized"))

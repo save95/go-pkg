@@ -39,6 +39,11 @@ func WithXSSDebug() mxss.Option {
 	return mxss.WithDebug()
 }
 
+// WithTrimSpaceEnabled 设置是否开启过滤前后空格
+func WithTrimSpaceEnabled(enabled bool) mxss.Option {
+	return mxss.WithTrimSpaceEnabled(enabled)
+}
+
 // WithXSSGlobalSkipFields 指定全局忽略字段
 func WithXSSGlobalSkipFields(fields ...string) mxss.Option {
 	return mxss.WithGlobalSkipFields(fields...)

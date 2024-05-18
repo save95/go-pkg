@@ -24,10 +24,28 @@ func WithGlobalFieldPolicy(p xss.Policy, fields ...string) Option {
 	}
 }
 
-// WithDebug 设置调试模式
+// WithDebug 设置调试模式。默认不启用
 func WithDebug() func(h *handler) {
 	return func(h *handler) {
 		h.debug = true
+	}
+}
+
+// WithTrimSpaceEnabled 是否启用空格过滤。默认不启用
+func WithTrimSpaceEnabled(enabled bool) func(h *handler) {
+	return func(h *handler) {
+		h.trimSpaceEnabled = enabled
+	}
+}
+
+// WithPasswordField 自定义密码字段名。
+// 默认有：
+// "password", "newPassword", "oldPassword", "confirmedPassword",
+// "pwd", "newPwd", "oldPwd", "confirmedPwd"
+func WithPasswordField(field string, fields ...string) func(h *handler) {
+	return func(h *handler) {
+		fields = append([]string{field}, fields...)
+		h.passwordFieldName = append(h.passwordFieldName, field)
 	}
 }
 

@@ -21,6 +21,7 @@ type strategy struct {
 
 type ruleItem struct {
 	withToken  bool
+	headerKeys []string            // 用于计算缓存的 header key
 	fields     map[string]struct{} // 用于计算缓存的字段 key。会覆盖 globalSkipFields 规则
 	skipFields map[string]struct{} // 不用于计算缓存的 key
 	duration   time.Duration       // 缓存时长。会覆盖 globalDuration 规则

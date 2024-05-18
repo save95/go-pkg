@@ -20,7 +20,9 @@ import (
 type handler struct {
 	xssRuleItem
 
-	debug bool
+	debug             bool
+	trimSpaceEnabled  bool
+	passwordFieldName []string
 
 	// 路由特殊规则
 	routePolicies map[string]*xssRuleItem
@@ -33,8 +35,14 @@ func New(opts ...Option) gin.HandlerFunc {
 		xssRuleItem: xssRuleItem{
 			skipField: make(map[string]struct{}, 0),
 		},
-		routePolicies: make(map[string]*xssRuleItem, 0),
-		skipRoutes:    make(map[string]struct{}, 0),
+		debug:            false,
+		trimSpaceEnabled: false,
+		passwordFieldName: []string{
+			"password", "newPassword", "oldPassword", "confirmedPassword",
+			"pwd", "newPwd", "oldPwd", "confirmedPwd",
+		},
+		routePolicies: make(map[string]*xssRuleItem),
+		skipRoutes:    make(map[string]struct{}),
 	}
 	//xf.policy = xf.makePolicy(PolicyStrict)
 
@@ -59,7 +67,12 @@ func (h *handler) makePolicy(p xss.Policy) *bluemonday.Policy {
 }
 
 func (h *handler) makeSkipFields(fields []string) map[string]struct{} {
-	vals := make(map[string]struct{}, 0)
+	vals := make(map[string]struct{})
+
+	// 默认跳过密码字段
+	for _, s := range h.passwordFieldName {
+		vals[s] = struct{}{}
+	}
 
 	for _, field := range fields {
 		vals[field] = struct{}{}
@@ -128,6 +141,17 @@ func (h *handler) filter() gin.HandlerFunc {
 }
 
 func (h *handler) filterXSS(fullPath, key, val string) string {
+	isPassword := false
+	for _, s := range h.passwordFieldName {
+		if s == key {
+			isPassword = true
+			break
+		}
+	}
+	if h.trimSpaceEnabled && !isPassword {
+		val = strings.TrimSpace(val)
+	}
+
 	for route, item := range h.routePolicies {
 		if strings.Contains(fullPath, route) {
 			if _, ok := item.skipField[key]; ok {

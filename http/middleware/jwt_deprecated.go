@@ -20,7 +20,7 @@ func JWT(f types.ToRole) gin.HandlerFunc {
 			RefreshDuration: 0,
 		}
 		if err := jwt2.NewHandler(c, opt).Handle(); err != nil {
-			fmt.Println("Unauthorized")
+			//fmt.Println("Unauthorized")
 			_ = c.AbortWithError(http.StatusUnauthorized, fmt.Errorf("unauthorized"))
 			return
 		}

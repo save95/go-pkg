@@ -73,6 +73,7 @@ func (in DayStatRequest) computeStatAt() ([]time.Time, error) {
 		return nil, xerror.Wrap(err, "结束日期格式错误，必须为 2006-01-02")
 	}
 
+	endAt = time.Date(endAt.Year(), endAt.Month(), endAt.Day(), 23, 59, 59, 1e9-1, time.Local)
 	if startAt.After(endAt) {
 		return nil, xerror.New("开始日期不能在结束日期之后")
 	}

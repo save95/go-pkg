@@ -56,6 +56,22 @@ func WithGlobalCacheDuration(d time.Duration) Option {
 	}
 }
 
+func WithGlobalHeaderKey(keys []string) Option {
+	return func(c *handler) {
+		c.globalHeaderKeys = keys
+	}
+}
+
+func WithAppendGlobalHeaderKey(keys ...string) Option {
+	return func(c *handler) {
+		globals := c.globalHeaderKeys
+		if len(globals) == 0 {
+			globals = []string{}
+		}
+		c.globalHeaderKeys = append(globals, keys...)
+	}
+}
+
 func WithGlobalSkipQueryFields(fields ...string) Option {
 	return func(c *handler) {
 		for _, field := range fields {
@@ -70,29 +86,33 @@ func WithCacheKeyPrefix(str string) Option {
 	}
 }
 
-func WithoutHeader(without bool) Option {
+func WithoutResponseHeader(without bool) Option {
 	return func(c *handler) {
-		c.withoutHeader = without
+		c.withoutResponseHeader = without
 	}
 }
 
+// WithRoutePolicy 路由策略
 func WithRoutePolicy(route string, withToken bool, fields ...string) Option {
-	return withRouteRule(route, withToken, 0, fields, nil)
+	return withRouteRule(route, withToken, 0, fields, nil, nil)
 }
 
+// WithRouteRule 路由规则
 func WithRouteRule(route string, withToken bool, duration time.Duration, fields ...string) Option {
-	return withRouteRule(route, withToken, duration, fields, nil)
+	return withRouteRule(route, withToken, duration, fields, nil, nil)
 }
 
+// WithRouteSkipFiledPolicy 带忽略字段的路由策略
 func WithRouteSkipFiledPolicy(route string, withToken bool, skipFields ...string) Option {
-	return withRouteRule(route, withToken, 0, nil, skipFields)
+	return withRouteRule(route, withToken, 0, nil, nil, skipFields)
 }
 
+// WithRouteSkipFiledRule 带忽略字段的路由规则
 func WithRouteSkipFiledRule(route string, withToken bool, duration time.Duration, skipFields ...string) Option {
-	return withRouteRule(route, withToken, duration, nil, skipFields)
+	return withRouteRule(route, withToken, duration, nil, nil, skipFields)
 }
 
-func withRouteRule(route string, withToken bool, duration time.Duration, fields, skipFields []string) Option {
+func withRouteRule(route string, withToken bool, duration time.Duration, fields, headerKeys, skipFields []string) Option {
 	return func(c *handler) {
 		// 先记录顺序
 		c.routeList = append(c.routeList, route)
@@ -117,6 +137,13 @@ func withRouteRule(route string, withToken bool, duration time.Duration, fields,
 			for _, field := range fields {
 				rule.fields[field] = struct{}{}
 			}
+		}
+
+		if headerKeys != nil {
+			if rule.headerKeys == nil {
+				rule.headerKeys = make([]string, 0)
+			}
+			rule.headerKeys = append(rule.headerKeys, headerKeys...)
 		}
 
 		if skipFields != nil {

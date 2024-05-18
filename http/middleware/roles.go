@@ -9,22 +9,18 @@ import (
 )
 
 // Roles 角色权限中间件
+// Deprecated. use WithRole
 func Roles(roles []types.IRole) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		svrCtx, err := types.MustParseHttpContext(ctx)
-		if nil != err {
-			fmt.Println("role error: context convert failed")
-			_ = ctx.AbortWithError(http.StatusForbidden, fmt.Errorf("context convert failed"))
+	if len(roles) == 1 {
+		return WithRole(roles[0])
+	} else if len(roles) > 1 {
+		return WithRole(roles[0], roles[1:]...)
+	} else {
+		return func(ctx *gin.Context) {
+			fmt.Println("role empty")
+			_ = ctx.AbortWithError(http.StatusForbidden, fmt.Errorf("role empty"))
 			return
 		}
-		if !svrCtx.HasRole(roles) {
-			fmt.Println("role error")
-			_ = ctx.AbortWithError(http.StatusForbidden, fmt.Errorf("role error"))
-			ctx.Abort()
-			return
-		}
-
-		ctx.Next()
 	}
 }
 

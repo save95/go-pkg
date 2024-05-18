@@ -17,17 +17,19 @@ import (
 )
 
 type handler struct {
-	debug               bool
-	singleFlightTimeout time.Duration
-	withoutHeader       bool
-	prefixKey           string
-	log                 xlog.XLogger
+	debug                 bool
+	singleFlightTimeout   time.Duration
+	withoutResponseHeader bool
+	prefixKey             string
+	log                   xlog.XLogger
 
 	store     store.ICacheStore
 	jwtOption *jwt.Option
 
-	globalCacheDuration time.Duration
-	globalSkipFields    map[string]struct{} // 不用于计算缓存的 key
+	globalCacheDuration    time.Duration
+	globalHeaderKeys       []string            // 用于计算缓存的 header
+	globalSkipFields       map[string]struct{} // 不用于计算缓存的 key
+	globalRequestHeaderKey map[string]struct{}
 
 	routeList     []string             // 路由规则排序列表
 	routePolicies map[string]*ruleItem // 路由特殊规则: urlPathRegrex => ruleItem
@@ -36,6 +38,7 @@ type handler struct {
 func New(opts ...Option) gin.HandlerFunc {
 	f := &handler{
 		globalCacheDuration: 5 * time.Minute,
+		globalHeaderKeys:    make([]string, 0),
 		globalSkipFields:    make(map[string]struct{}, 0),
 		routeList:           make([]string, 0),
 		routePolicies:       make(map[string]*ruleItem, 0),
@@ -80,7 +83,7 @@ func New(opts ...Option) gin.HandlerFunc {
 
 		c.Writer.WriteHeader(respCache.Status)
 
-		if !f.withoutHeader {
+		if !f.withoutResponseHeader {
 			for key, values := range respCache.Header {
 				for _, val := range values {
 					c.Writer.Header().Set(key, val)
@@ -144,6 +147,12 @@ func (h *handler) getCacheStrategy(ctx *gin.Context) (*strategy, error) {
 		}
 	}
 
+	headers := ctx.Request.Header
+	headerKeys := append(h.globalHeaderKeys, rule.headerKeys...)
+	for _, key := range headerKeys {
+		params.Add(strings.ToLower(key), headers.Get(key))
+	}
+
 	var userID uint
 	if rule.withToken {
 		user, err := jwt.MustParseJWTUser(ctx, h.jwtOption)
@@ -156,7 +165,7 @@ func (h *handler) getCacheStrategy(ctx *gin.Context) (*strategy, error) {
 
 	cacheKey := ctx.Request.URL.Path + ":" + params.Encode()
 	if userID > 0 {
-		cacheKey += ":forUser:" + strconv.Itoa(int(userID))
+		cacheKey += ":uid=" + strconv.Itoa(int(userID))
 	}
 	h.debugf("get cache strategy input: qs=%s, key=%s", qs.Encode(), cacheKey)
 
@@ -262,7 +271,7 @@ func (h *handler) getCacheKey(key string) string {
 func (h *handler) replyWithCache(c *gin.Context, respCache *store.CachedResponse) {
 	c.Writer.WriteHeader(respCache.Status)
 
-	if !h.withoutHeader {
+	if !h.withoutResponseHeader {
 		for key, values := range respCache.Header {
 			for _, val := range values {
 				c.Writer.Header().Set(key, val)
