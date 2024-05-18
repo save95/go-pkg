@@ -12,12 +12,14 @@ type wrapper struct {
 	log xlog.XLogger
 }
 
+// Deprecated
 func NewWrapper() *wrapper {
 	return &wrapper{
 		ctx: context.Background(),
 	}
 }
 
+// Deprecated
 func (w *wrapper) WithContext(ctx context.Context) *wrapper {
 	if nil != ctx {
 		w.ctx = ctx
@@ -25,6 +27,7 @@ func (w *wrapper) WithContext(ctx context.Context) *wrapper {
 	return w
 }
 
+// Deprecated
 func (w *wrapper) WithLog(log xlog.XLogger) *wrapper {
 	if log != nil {
 		w.log = log
@@ -32,6 +35,7 @@ func (w *wrapper) WithLog(log xlog.XLogger) *wrapper {
 	return w
 }
 
+// Deprecated
 func (w *wrapper) HTTPSQS(handler httpsqs.IHandler) IConsumer {
 	return NewHttpSQSConsumer(handler).
 		WithContext(w.ctx).

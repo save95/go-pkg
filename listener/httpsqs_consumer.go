@@ -19,6 +19,7 @@ type httpSQSConsumer struct {
 	retry int
 }
 
+// Deprecated
 func NewHttpSQSConsumer(handler httpsqs.IHandler) *httpSQSConsumer {
 	return &httpSQSConsumer{
 		handler: handler,
@@ -27,6 +28,7 @@ func NewHttpSQSConsumer(handler httpsqs.IHandler) *httpSQSConsumer {
 	}
 }
 
+// Deprecated
 func (s *httpSQSConsumer) WithContext(ctx context.Context) *httpSQSConsumer {
 	if nil != ctx {
 		s.ctx = ctx
@@ -35,6 +37,7 @@ func (s *httpSQSConsumer) WithContext(ctx context.Context) *httpSQSConsumer {
 	return s
 }
 
+// Deprecated
 func (s *httpSQSConsumer) WithLog(log xlog.XLogger) *httpSQSConsumer {
 	if nil != log {
 		s.log = log
@@ -43,6 +46,7 @@ func (s *httpSQSConsumer) WithLog(log xlog.XLogger) *httpSQSConsumer {
 	return s
 }
 
+// Deprecated
 func (s *httpSQSConsumer) Consume() error {
 	msg := fmt.Sprintf("[httpsqs] %s consumer, start", s.handler.QueueName())
 	client, err := s.handler.GetClient()

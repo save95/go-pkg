@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/md5"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -23,10 +24,9 @@ type dbCache struct {
 	name         string
 	autoRenew    bool // 自动延长缓存有效期
 	expiration   time.Duration
-	//log          xlog.XLogger
 }
 
-func NewDefault(name string, cacheManager *cache.Cache) IDBCache {
+func NewDefault(name string, cacheManager *cache.Cache) *dbCache {
 	return &dbCache{
 		name:         name,
 		cacheManager: cacheManager,
@@ -54,26 +54,12 @@ func (s *dbCache) Paginate(ctx context.Context, opt pager.Option,
 	kbs, _ := json.Marshal(opt)
 	k := strings.ToLower(fmt.Sprintf("%x", md5.Sum(kbs)))
 	key := fmt.Sprintf("%s:paginate:%s", s.name, k)
-	//if strings.Contains(s.name, "round") {
-	//	fmt.Printf("========== %s ============\n", key)
-	//}
 
 	jsonStr, err := s.getOrQuery(ctx, key, func() (interface{}, error) {
 		records, total, err := fun()
 		if nil != err {
 			return nil, err
 		}
-
-		//slices, ok := sliceutil.ToAny(records)
-		//if !ok {
-		//	slices = make([]interface{}, 0)
-		//}
-		//
-		//return &PaginateResult{
-		//	Data:  slices,
-		//	Total: total,
-		//	Query: opt,
-		//}, nil
 
 		bs, err := json.Marshal(records)
 		if nil != err {
@@ -110,10 +96,21 @@ func (s *dbCache) First(ctx context.Context, id uint,
 		return "", err
 	}
 
-	//var data interface{}
-	//if err := json.Unmarshal([]byte(jsonStr), &data); nil != err {
-	//	return nil, xerror.Wrap(err, "data unmarshal failed")
-	//}
+	return jsonStr, nil
+}
+
+func (s *dbCache) FirstBy(ctx context.Context, key string,
+	fun func() (interface{}, error),
+) (string, error) {
+	if len(key) == 0 {
+		return "", xerror.New("key error")
+	}
+
+	cacheKey := fmt.Sprintf("%s:first:by-%s", s.name, key)
+	jsonStr, err := s.getOrQuery(ctx, cacheKey, fun)
+	if nil != err {
+		return "", err
+	}
 
 	return jsonStr, nil
 }
@@ -158,12 +155,11 @@ func (s *dbCache) getOrQuery(ctx context.Context, key string,
 		return cacheData.(string), nil
 	}
 
-	if redis.Nil != err {
+	if !errors.Is(err, redis.Nil) {
 		return "", err
 	}
 
 	v, err, _ := single.Do(key, func() (interface{}, error) {
-		//s.log.Debugf("key[%s] no cache, query", key)
 		record, err := fun()
 		if nil != err {
 			return nil, err

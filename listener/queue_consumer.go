@@ -18,6 +18,7 @@ type redisConsumer struct {
 	fun func(val string) error
 }
 
+// Deprecated
 func (q *redisConsumer) Consume() error {
 	queued := queue.NewSimpleRedis(q.config, q.queueName)
 
