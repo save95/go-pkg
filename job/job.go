@@ -2,10 +2,8 @@ package job
 
 import (
 	"context"
-	"errors"
 	"log"
 
-	"github.com/save95/xerror"
 	"github.com/save95/xlog"
 )
 
@@ -27,10 +25,6 @@ func (j commandJob) Run() {
 	defer j.logf("debug", "[job] %s run end", j.jobName)
 
 	if err := j.job.Run(j.args...); nil != err {
-		var xe xerror.XError
-		if errors.As(err, &xe) {
-			err = xe.Unwrap()
-		}
 		j.logf("error", "[job] %s run failed: %+v", j.jobName, err)
 
 		if j.failedSaver != nil {
